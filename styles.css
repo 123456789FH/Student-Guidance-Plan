@@ -346,3 +346,211 @@ main { margin-top: 20px; }
   .date-cell { min-height: 70px; }
   .footer { margin-top: 12px; border-radius: 12px; }
 }
+
+/* ===== إصدار ٢: لوحة الإنجاز، جواز الأثر، التوثيق وقياس الأثر ===== */
+.achievement-section { margin-top: 28px; }
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.metric-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 128px;
+  padding: 18px;
+  border: 1px solid #dce9e6;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #ffffff, #f1f9f7);
+  box-shadow: var(--soft-shadow);
+}
+.metric-card::after {
+  content: "";
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  left: -25px;
+  bottom: -30px;
+  border-radius: 50%;
+  background: rgba(80,186,178,.10);
+}
+.metric-card__icon { font-size: 1.45rem; }
+.metric-card__value { display: block; margin-top: 8px; font-size: 1.75rem; font-weight: 900; color: var(--teal-950); }
+.metric-card__label { display: block; margin-top: 4px; color: var(--muted); font-weight: 800; font-size: .88rem; }
+
+.passport-card {
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid #e6dcc5;
+  border-radius: 22px;
+  background: linear-gradient(120deg, #fffdf8, #f7fbfa);
+  box-shadow: var(--soft-shadow);
+}
+.passport-card__head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.passport-card__head h3 { margin: 5px 0 0; color: var(--teal-950); }
+.passport-status { padding: 9px 13px; border-radius: 999px; background: var(--teal-950); color: #fff; font-weight: 900; white-space: nowrap; }
+.impact-passport { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+.passport-stamp {
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 11px 8px;
+  border: 1px dashed #c9d9d6;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--muted);
+  transition: .2s ease;
+}
+.passport-stamp strong { display: block; margin-top: 4px; color: var(--ink); font-size: .86rem; }
+.passport-stamp__seal { font-size: 1.6rem; filter: grayscale(1); opacity: .55; }
+.passport-stamp.is-complete {
+  border-style: solid;
+  border-color: #b9dcd7;
+  background: linear-gradient(160deg, #effaf8, #fff8e8);
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.72), 0 7px 18px rgba(8,90,84,.08);
+  color: var(--teal-950);
+}
+.passport-stamp.is-complete .passport-stamp__seal { filter: none; opacity: 1; transform: rotate(-7deg); }
+
+.followup-cell { min-height: 460px; display: flex; flex-direction: column; gap: 10px; }
+.followup-panel {
+  display: grid;
+  gap: 10px;
+  height: 100%;
+}
+.execution-toggle {
+  width: 100%;
+  border: 1px solid #cfe2df;
+  border-radius: 13px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--teal-950);
+  font-weight: 900;
+  box-shadow: 0 5px 13px rgba(8,90,84,.06);
+}
+.execution-toggle.is-complete {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #15978f, #066761);
+}
+.followup-details {
+  border: 1px solid #dbe8e5;
+  border-radius: 13px;
+  background: #fff;
+  overflow: hidden;
+}
+.followup-details summary {
+  list-style: none;
+  padding: 11px 12px;
+  font-weight: 900;
+  color: var(--teal-950);
+  background: #f3faf8;
+}
+.followup-details summary::-webkit-details-marker { display: none; }
+.followup-details summary::after { content: "⌄"; float: left; transition: .2s ease; }
+.followup-details[open] summary::after { transform: rotate(180deg); }
+.followup-content { display: grid; gap: 10px; padding: 12px; }
+.indicator-grid { display: grid; grid-template-columns: 1fr; gap: 9px; }
+.indicator-field { display: grid; gap: 5px; font-size: .82rem; font-weight: 800; color: var(--muted); }
+.indicator-field input, .indicator-field textarea {
+  width: 100%;
+  border: 1px solid #d5e4e1;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fff;
+  outline: none;
+  color: var(--ink);
+}
+.indicator-field textarea { min-height: 72px; resize: vertical; }
+.indicator-field input:focus, .indicator-field textarea:focus { border-color: var(--teal-500); box-shadow: 0 0 0 3px rgba(80,186,178,.12); }
+
+.evidence-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  padding: 12px;
+  border: 1px dashed #9ecbc6;
+  border-radius: 12px;
+  background: #f8fdfc;
+  color: var(--teal-950);
+  font-weight: 900;
+  text-align: center;
+  cursor: pointer;
+}
+.evidence-upload input { display: none; }
+.evidence-note { margin: 0; font-size: .74rem; color: var(--muted); line-height: 1.6; }
+.evidence-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.evidence-item { position: relative; min-height: 74px; border-radius: 11px; overflow: hidden; border: 1px solid #dbe7e4; background: #eef6f4; }
+.evidence-item img { width: 100%; height: 86px; object-fit: cover; display: block; }
+.evidence-item button {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(104,40,35,.88);
+  color: #fff;
+  font-weight: 900;
+}
+.empty-evidence { grid-column: 1 / -1; padding: 12px; border-radius: 10px; background: #f8faf9; color: var(--muted); text-align: center; font-size: .78rem; }
+.report-btn { width: 100%; }
+
+.week-card__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.12);
+  font-size: .83rem;
+}
+.week-card__status b { color: #fff6d9; }
+
+.footer { font-size: 1rem; }
+.footer strong { color: #fff2cf; font-size: 1.03rem; }
+
+@media (max-width: 1050px) {
+  .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .impact-passport { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .achievement-section .section-title { align-items: stretch; }
+  .passport-card__head { align-items: flex-start; }
+  .impact-passport { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .dashboard { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card { min-height: 112px; padding: 14px; }
+  .metric-card__value { font-size: 1.45rem; }
+  .passport-card { padding: 15px; }
+  .passport-card__head { flex-direction: column; }
+  .impact-passport { grid-template-columns: 1fr 1fr; }
+  .evidence-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media print {
+  .achievement-section, .followup-cell { display: none !important; }
+}
+.idea-item { grid-template-columns: 20px 1fr auto; }
+.idea-remove {
+  align-self: start;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: #f6e9e7;
+  color: var(--danger);
+  font-weight: 900;
+  line-height: 1;
+}
+@media print {
+  .followup-label { display: none !important; }
+}

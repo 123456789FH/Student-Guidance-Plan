@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#087f79" />
-  <meta name="description" content="خطة تفاعلية لبرامج التوجيه الطلابي والقيم، مع أفكار تنفيذ قابلة للحفظ والتعديل." />
+  <meta name="description" content="خطة تفاعلية لبرامج التوجيه الطلابي والقيم، مع أفكار تنفيذ وتوثيق وقياس أثر وتقارير قابلة للطباعة." />
   <title>الخطة التفاعلية للتوجيه الطلابي والقيم</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -43,7 +43,8 @@
     <section class="toolbar" aria-label="أدوات الخطة">
       <div class="toolbar__group">
         <button class="btn btn--primary" id="saveBtn" type="button">💾 حفظ البيانات</button>
-        <button class="btn" id="printBtn" type="button">🖨️ طباعة / PDF</button>
+        <button class="btn" id="printBtn" type="button">🖨️ طباعة الخطة / PDF</button>
+        <button class="btn" id="printFinalReportBtn" type="button">📄 التقرير الختامي</button>
         <button class="btn" id="installBtn" type="button" hidden>📲 تثبيت التطبيق</button>
       </div>
       <div class="toolbar__group">
@@ -58,13 +59,35 @@
         <div>
           <span class="eyebrow">هوية الخطة</span>
           <h2>«أثري يبدأ مني»</h2>
-          <p>لكل أسبوع برامج وفعاليات وقيمة مستهدفة، ومع كل منها قائمة أفكار تنفيذية قابلة للاختيار والإضافة والحفظ.</p>
+          <p>لكل أسبوع برامج وفعاليات وقيمة مستهدفة، مع أفكار تنفيذية، متابعة الإنجاز، قياس الأثر، صور التوثيق، وتقارير قابلة للطباعة.</p>
         </div>
         <div class="legend" aria-label="دليل الرموز">
           <span>🎯 برامج</span>
           <span>💡 أفكار تنفيذ</span>
           <span>💎 قيم</span>
           <span>📸 توثيق</span>
+          <span>📊 قياس أثر</span>
+        </div>
+      </section>
+
+      <section class="achievement-section" aria-labelledby="achievementTitle">
+        <div class="section-title">
+          <div>
+            <span class="eyebrow">متابعة التنفيذ</span>
+            <h2 id="achievementTitle">لوحة الإنجاز وجواز الأثر</h2>
+          </div>
+          <span class="hint">يُختم الأسبوع تلقائيًا عند اختيار «تم التنفيذ»</span>
+        </div>
+        <div id="dashboard" class="dashboard"></div>
+        <div class="passport-card">
+          <div class="passport-card__head">
+            <div>
+              <span class="eyebrow">جواز الأثر</span>
+              <h3>سبع محطات… وأثر واحد متكامل</h3>
+            </div>
+            <span id="passportStatus" class="passport-status">٠ من ٧</span>
+          </div>
+          <div id="impactPassport" class="impact-passport"></div>
         </div>
       </section>
 
@@ -74,7 +97,7 @@
             <span class="eyebrow">الخطة الأسبوعية</span>
             <h2 id="planTitle">الأسابيع السبعة</h2>
           </div>
-          <span class="hint">اضغطي على «أفكار التنفيذ» أو «أفكار القيمة» داخل أي أسبوع</span>
+          <span class="hint">اضغطي على الأفكار أو متابعة الأسبوع لإظهار التفاصيل</span>
         </div>
         <div class="table-wrap">
           <div id="planTable" class="plan-table" role="table" aria-label="الخطة الأسبوعية التفاعلية"></div>
@@ -93,17 +116,9 @@
     </main>
 
     <footer class="footer">
-      <span>إعداد وتنفيذ</span>
       <strong>أ/ فاطمة هزازي</strong>
     </footer>
   </div>
-
-  <template id="ideaItemTemplate">
-    <label class="idea-item">
-      <input type="checkbox" />
-      <span class="idea-item__text"></span>
-    </label>
-  </template>
 
   <script src="app.js" defer></script>
 </body>
