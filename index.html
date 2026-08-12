@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#087f79" />
+  <meta name="description" content="خطة تفاعلية لبرامج التوجيه الطلابي والقيم، مع أفكار تنفيذ قابلة للحفظ والتعديل." />
+  <title>الخطة التفاعلية للتوجيه الطلابي والقيم</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero" aria-label="رأس الخطة">
+      <div class="hero__pattern" aria-hidden="true"></div>
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div>
+          <p>المملكة العربية السعودية</p>
+          <h1>الخطة التفاعلية لبرامج التوجيه الطلابي والقيم</h1>
+          <p class="hero__subtitle">قيمة أعيشها • سلوك أمارسه • أثر أتركه</p>
+        </div>
+      </div>
+
+      <div class="identity-card">
+        <label>
+          <span>إدارة التعليم</span>
+          <input id="educationAdmin" type="text" inputmode="text" placeholder="اكتبي اسم الإدارة" autocomplete="off" />
+        </label>
+        <label>
+          <span>اسم المدرسة</span>
+          <input id="schoolName" type="text" inputmode="text" placeholder="اكتبي اسم المدرسة" autocomplete="off" />
+        </label>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="أدوات الخطة">
+      <div class="toolbar__group">
+        <button class="btn btn--primary" id="saveBtn" type="button">💾 حفظ البيانات</button>
+        <button class="btn" id="printBtn" type="button">🖨️ طباعة / PDF</button>
+        <button class="btn" id="installBtn" type="button" hidden>📲 تثبيت التطبيق</button>
+      </div>
+      <div class="toolbar__group">
+        <button class="btn btn--soft" id="expandAllBtn" type="button">⌄ فتح جميع الأفكار</button>
+        <button class="btn btn--danger" id="resetBtn" type="button">↺ إعادة ضبط</button>
+      </div>
+      <div class="save-status" id="saveStatus" role="status" aria-live="polite">جاهز</div>
+    </section>
+
+    <main>
+      <section class="overview-card">
+        <div>
+          <span class="eyebrow">هوية الخطة</span>
+          <h2>«أثري يبدأ مني»</h2>
+          <p>لكل أسبوع برامج وفعاليات وقيمة مستهدفة، ومع كل منها قائمة أفكار تنفيذية قابلة للاختيار والإضافة والحفظ.</p>
+        </div>
+        <div class="legend" aria-label="دليل الرموز">
+          <span>🎯 برامج</span>
+          <span>💡 أفكار تنفيذ</span>
+          <span>💎 قيم</span>
+          <span>📸 توثيق</span>
+        </div>
+      </section>
+
+      <section class="table-section" aria-labelledby="planTitle">
+        <div class="section-title">
+          <div>
+            <span class="eyebrow">الخطة الأسبوعية</span>
+            <h2 id="planTitle">الأسابيع السبعة</h2>
+          </div>
+          <span class="hint">اضغطي على «أفكار التنفيذ» أو «أفكار القيمة» داخل أي أسبوع</span>
+        </div>
+        <div class="table-wrap">
+          <div id="planTable" class="plan-table" role="table" aria-label="الخطة الأسبوعية التفاعلية"></div>
+        </div>
+      </section>
+
+      <section class="mobile-section" aria-labelledby="cardsTitle">
+        <div class="section-title">
+          <div>
+            <span class="eyebrow">عرض مريح للجوال</span>
+            <h2 id="cardsTitle">بطاقات الأسابيع</h2>
+          </div>
+        </div>
+        <div id="weekCards" class="week-cards"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>إعداد وتنفيذ</span>
+      <strong>أ/ فاطمة هزازي</strong>
+    </footer>
+  </div>
+
+  <template id="ideaItemTemplate">
+    <label class="idea-item">
+      <input type="checkbox" />
+      <span class="idea-item__text"></span>
+    </label>
+  </template>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
