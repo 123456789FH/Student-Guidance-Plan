@@ -40,7 +40,7 @@ button { cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  min-height: 260px;
+  min-height: 230px;
   border: 1px solid rgba(255,255,255,.65);
   border-radius: 34px;
   padding: 34px;
@@ -106,7 +106,7 @@ button { cursor: pointer; }
 .identity-card input:focus { border-color: var(--teal-500); box-shadow: 0 0 0 4px rgba(80,186,178,.15); }
 
 .toolbar {
-  margin-top: 86px;
+  margin-top: 18px;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -308,12 +308,12 @@ main { margin-top: 20px; }
 
 @media (max-width: 900px) {
   .app-shell { padding: 10px; }
-  .hero { padding: 24px 18px 90px; min-height: unset; }
+  .hero { padding: 24px 18px 28px; min-height: unset; }
   .brand { align-items: flex-start; }
   .brand__mark { padding: 12px; gap: 5px; grid-template-columns: repeat(5, 7px); }
   .brand__mark span { width: 7px; height: 7px; }
   .identity-card { grid-template-columns: 1fr; margin-bottom: -145px; }
-  .toolbar { margin-top: 156px; }
+  .toolbar { margin-top: 18px; }
   .overview-card, .section-title { align-items: stretch; flex-direction: column; }
   .legend { justify-content: flex-start; }
   .table-section { display: none; }
@@ -676,8 +676,8 @@ main { margin-top: 20px; }
   top: 28px;
   right: 28px;
   z-index: 3;
-  width: 104px;
-  height: 104px;
+  width: 118px;
+  height: 118px;
   padding: 8px;
   border-radius: 25px;
   background: rgba(255,255,255,.94);
@@ -686,7 +686,7 @@ main { margin-top: 20px; }
   backdrop-filter: blur(10px);
 }
 .hero-logo img { width: 100%; height: 100%; display: block; object-fit: contain; border-radius: 18px; }
-.hero .brand { padding-right: 126px; }
+.hero .brand { padding-right: 142px; }
 
 .export-menu { position: relative; }
 .export-menu > summary { list-style: none; cursor: pointer; }
@@ -819,16 +819,16 @@ main { margin-top: 20px; }
 }
 
 @media (max-width: 900px) {
-  .hero-logo { width: 82px; height: 82px; top: 20px; right: 18px; border-radius: 20px; }
-  .hero .brand { padding-right: 92px; }
+  .hero-logo { width: 92px; height: 92px; top: 20px; right: 18px; border-radius: 20px; }
+  .hero .brand { padding-right: 106px; }
   .export-menu { flex: 1 1 46%; }
   .export-menu > summary { width: 100%; }
   .export-menu__panel { width: min(270px, calc(100vw - 36px)); }
 }
 
 @media (max-width: 560px) {
-  .hero-logo { width: 64px; height: 64px; top: 18px; right: 16px; padding: 5px; border-radius: 16px; }
-  .hero .brand { padding-right: 72px; }
+  .hero-logo { width: 70px; height: 70px; top: 18px; right: 16px; padding: 5px; border-radius: 16px; }
+  .hero .brand { padding-right: 82px; }
   .report-settings__grid { grid-template-columns: 1fr; }
   .logo-settings { grid-template-columns: 1fr; }
   .logo-settings__preview { width: 118px; height: 118px; margin: 0 auto; }

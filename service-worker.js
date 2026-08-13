@@ -1,4 +1,4 @@
-const CACHE = "student-counselor-assistant-v4-security";
+const CACHE = "student-counselor-assistant-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,7 +6,8 @@ const ASSETS = [
   "./app.js",
   "./manifest.webmanifest",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./forum-logo.png"
 ];
 
 self.addEventListener("install", (event) => {

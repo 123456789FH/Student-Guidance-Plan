@@ -250,8 +250,8 @@ function loadState() {
 const state = loadState();
 
 function captureIdentity() {
-  state.admin = document.querySelector("#educationAdmin")?.value || state.admin || "";
-  state.school = document.querySelector("#schoolName")?.value || state.school || "";
+  state.admin = state.admin || "";
+  state.school = state.school || "";
 }
 
 function persistState(message = "") {
@@ -387,10 +387,10 @@ function buildNoorSummaryText(week) {
   const status = state.completed[completionKey(week.id)] ? "تم التنفيذ" : "قيد التنفيذ";
   const pct = (value) => value === "" || value == null ? "—" : `${arNum(value)}٪`;
   return [
-    `اسم مُعدّ/ة التقرير: ${state.report?.userName || "—"}`,
+    `اسم مُعدّ التقرير: ${state.report?.userName || "—"}`,
     `إدارة التعليم: ${state.admin || "—"}`,
     `المدرسة: ${state.school || "—"}`,
-    `مدير/ة المدرسة: ${state.report?.principalName || "—"}`,
+    `مدير المدرسة: ${state.report?.principalName || "—"}`,
     `الأسبوع: ${week.title} — ${week.theme}`,
     `الفترة: ${week.dates[0]} إلى ${week.dates[1]}`,
     `البرنامج: ${chosenProgram}`,
@@ -444,7 +444,7 @@ function renderNoorAssistantPanel(week) {
 
   const safeNote = document.createElement("div");
   safeNote.className = "noor-safe-note";
-  safeNote.innerHTML = '<strong>تنبيه:</strong> هذه الحقول لتنظيم بيانات التوثيق فقط، ولا يوجد ربط مباشر أو إرسال تلقائي إلى نظام نور. لا تدخلي بيانات شخصية للطلاب أو الطالبات.';
+  safeNote.innerHTML = '<strong>تنبيه:</strong> هذه الحقول لتنظيم بيانات التوثيق فقط، ولا يوجد ربط مباشر أو إرسال تلقائي إلى نظام نور. لا تدخل بيانات شخصية للطلاب.';
   content.appendChild(safeNote);
 
   const record = getNoorRecord(week.id);
@@ -494,9 +494,9 @@ function renderNoorAssistantPanel(week) {
   addField("targetGroup", "الفئة المستهدفة", "input", "مثال: جميع الطلاب / طلاب الصف…");
   addField("beneficiaries", "عدد المستفيدين", "input", "مثال: ١٢٠");
   addField("participants", "المشاركون في التنفيذ", "input", "مثال: الموجه الطلابي، المعلمون، الأسرة");
-  const procedure = addField("procedure", "إجراء التنفيذ / وصف ما تم تنفيذه", "textarea", "اكتبي وصفًا مختصرًا للإجراء المنفذ…");
+  const procedure = addField("procedure", "إجراء التنفيذ / وصف ما تم تنفيذه", "textarea", "اكتب وصفًا مختصرًا للإجراء المنفذ…");
   addField("evidenceText", "شواهد التنفيذ", "textarea", "مثال: صور عامة، بطاقة، استبانة، جدارية، سجل حضور…");
-  addField("obstacles", "العوائق", "textarea", "إن وجدت، اكتبي العائق بصورة عامة دون بيانات شخصية…");
+  addField("obstacles", "العوائق", "textarea", "إن وجدت، اكتب العائق بصورة عامة دون بيانات شخصية…");
   addField("notes", "ملاحظات عامة", "textarea", "ملاحظات عامة فقط دون أسماء أو حالات فردية…");
   content.appendChild(grid);
 
@@ -510,7 +510,7 @@ function renderNoorAssistantPanel(week) {
   useIdeas.addEventListener("click", () => {
     const ideas = selectedProgramIdeasForWeek(week);
     if (!ideas.length) {
-      toast("حددي فكرة تنفيذ واحدة على الأقل أولًا");
+      toast("حدد فكرة تنفيذ واحدة على الأقل أولًا");
       return;
     }
     const value = ideas.join(" • ");
@@ -525,7 +525,7 @@ function renderNoorAssistantPanel(week) {
   copyBtn.textContent = "📋 نسخ ملخص التوثيق";
   copyBtn.addEventListener("click", async () => {
     const ok = await copyText(buildNoorSummaryText(week));
-    toast(ok ? "تم نسخ ملخص التوثيق" : "تعذر النسخ التلقائي؛ استخدمي تقرير الأسبوع");
+    toast(ok ? "تم نسخ ملخص التوثيق" : "تعذر النسخ التلقائي؛ استخدم تقرير الأسبوع");
   });
 
   actions.append(useIdeas, copyBtn);
@@ -618,7 +618,7 @@ function renderIdeaDetails(week, type) {
   const input = document.createElement("input");
   input.type = "text";
   input.maxLength = 300;
-  input.placeholder = isValue ? "أضيفي فكرة لتعزيز القيمة" : "أضيفي فكرة جديدة للتنفيذ";
+  input.placeholder = isValue ? "أضف فكرة لتعزيز القيمة" : "أضف فكرة جديدة للتنفيذ";
   const add = document.createElement("button");
   add.type = "button";
   add.textContent = "إضافة";
@@ -736,7 +736,7 @@ function renderFollowupPanel(week) {
   noteWrap.innerHTML = "<span>أبرز أثر أو نتيجة لوحظت</span>";
   const impactNote = document.createElement("textarea");
   impactNote.maxLength = 1000;
-  impactNote.placeholder = "اكتبي أثرًا مختصرًا عامًا دون أسماء أو بيانات شخصية…";
+  impactNote.placeholder = "اكتب أثرًا مختصرًا عامًا دون أسماء أو بيانات شخصية…";
   impactNote.value = indicator.impactNote || "";
   impactNote.dataset.indicatorWeek = String(week.id);
   impactNote.dataset.indicatorField = "impactNote";
@@ -772,7 +772,7 @@ function renderFollowupPanel(week) {
   upload.appendChild(fileInput);
   const note = document.createElement("p");
   note.className = "evidence-note";
-  note.textContent = "صور التوثيق مؤقتة لهذه الجلسة فقط ولا تُحفظ بعد تحديث الصفحة أو إغلاقها. PNG/JPEG/WebP بحد أقصى ٥ م.ب للصورة، ولا ترفعي صورًا معرّفة بالأشخاص.";
+  note.textContent = "صور التوثيق مؤقتة لهذه الجلسة فقط ولا تُحفظ بعد تحديث الصفحة أو إغلاقها. PNG/JPEG/WebP بحد أقصى ٥ م.ب للصورة، ولا ترفع صورًا معرّفة بالأشخاص.";
   const grid = document.createElement("div");
   grid.className = "evidence-grid";
   grid.dataset.evidenceGrid = String(week.id);
@@ -1037,7 +1037,7 @@ async function handleEvidenceUpload(weekId, files) {
     accepted.push(file);
   }
   if (!accepted.length) {
-    toast("اختاري PNG أو JPEG أو WebP بحجم لا يتجاوز ٥ م.ب للصورة");
+    toast("اختر PNG أو JPEG أو WebP بحجم لا يتجاوز ٥ م.ب للصورة");
     return;
   }
 
@@ -1126,7 +1126,7 @@ function displayValue(value) {
 }
 
 function getReportLogoSrc() {
-  return state.report?.logoDataUrl || new URL("icon-192.png", window.location.href).href;
+  return state.report?.logoDataUrl || new URL("forum-logo.png", window.location.href).href;
 }
 
 function reportHeaderHtml(title, subtitle = "") {
@@ -1135,10 +1135,10 @@ function reportHeaderHtml(title, subtitle = "") {
 
 function reportIdentityMeta(extra = "") {
   return `<div class="meta">
-    <div><b>اسم مُعدّ/ة التقرير:</b> ${displayValue(state.report?.userName)}</div>
+    <div><b>اسم مُعدّ التقرير:</b> ${displayValue(state.report?.userName)}</div>
     <div><b>إدارة التعليم:</b> ${displayValue(state.admin)}</div>
     <div><b>اسم المدرسة:</b> ${displayValue(state.school)}</div>
-    <div><b>مدير/ة المدرسة:</b> ${displayValue(state.report?.principalName)}</div>
+    <div><b>مدير المدرسة:</b> ${displayValue(state.report?.principalName)}</div>
     ${state.report?.academicYear ? `<div><b>العام الدراسي:</b> ${displayValue(state.report.academicYear)}</div>` : ""}
     ${extra}
   </div>`;
@@ -1184,14 +1184,13 @@ async function printWeekReport(week) {
   persistState();
   const win = window.open("", "_blank");
   if (!win) {
-    toast("اسمحي بالنوافذ المنبثقة لطباعة التقرير");
+    toast("اسمح بالنوافذ المنبثقة لطباعة التقرير");
     return;
   }
   try { win.opener = null; } catch {}
   const status = state.completed[completionKey(week.id)] ? "تم التنفيذ" : "قيد التنفيذ";
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير ${escapeHtml(week.title)}</title><style>${reportCss()}</style></head><body>
     ${reportHeaderHtml(`بطاقة التوثيق الأسبوعية — ${week.title}`, week.theme)}
-    <div class="disclaimer">مخرج مساعد لتنظيم البيانات قبل إدخالها يدويًا في النظام الرسمي. لا يوجد ربط مباشر أو إرسال تلقائي إلى نظام نور. صور التوثيق المستخدمة هنا مؤقتة في جلسة التطبيق.</div>
     ${reportIdentityMeta(`<div><b>الفترة:</b> ${escapeHtml(week.dates[0])} – ${escapeHtml(week.dates[1])}</div><div><b>الحالة:</b> <span class="status">${status}</span></div>`)}
     ${buildWeekSummaryHtml(week, { includePhotos: true, detailed: true })}
     <footer>أ/ فاطمة هزازي</footer>
@@ -1209,7 +1208,6 @@ function buildFinalReportHtml({ autoPrint = false, includePhotos = false } = {})
   const sections = weeks.map((week) => buildWeekSummaryHtml(week, { includePhotos, detailed: false })).join("");
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>التقرير الختامي للخطة</title><style>${reportCss()}</style></head><body>
     ${reportHeaderHtml("التقرير الختامي — «أثري يبدأ مني»", "تقرير منظم للتخطيط والتنفيذ وقياس الأثر")}
-    <div class="disclaimer">هذا التقرير مساعد للتوثيق ولا يمثل تكاملًا تقنيًا أو اعتمادًا من نظام نور. البيانات الشخصية والحالات الفردية لا ينبغي إدخالها في التطبيق.</div>
     ${reportIdentityMeta(`<div><b>الأسابيع المنفذة:</b> ${arNum(completedCount)} من ٧</div><div><b>صور التوثيق المؤقتة الحالية:</b> ${arNum(totalEvidence)}</div>`)}
     ${sections}
     <footer>أ/ فاطمة هزازي</footer>
@@ -1222,7 +1220,7 @@ function printFinalReport() {
   persistState();
   const win = window.open("", "_blank");
   if (!win) {
-    toast("اسمحي بالنوافذ المنبثقة لطباعة التقرير");
+    toast("اسمح بالنوافذ المنبثقة لطباعة التقرير");
     return;
   }
   try { win.opener = null; } catch {}
@@ -1321,18 +1319,124 @@ async function importJsonFile(file) {
     const text = await file.text();
     const parsed = JSON.parse(text.replace(/^\uFEFF/, ""));
     const clean = sanitizedImportedState(parsed);
-    if (!confirm("سيتم استبدال بيانات الخطة الحالية بالبيانات المستوردة. هل تريدين المتابعة؟")) return;
+    if (!confirm("سيتم استبدال بيانات الخطة الحالية بالبيانات المستوردة. هل تريد المتابعة؟")) return;
     localStorage.setItem(storageKey, JSON.stringify(clean));
     clearEvidenceCache();
     toast("تم استيراد البيانات بنجاح");
     setTimeout(() => location.reload(), 350);
   } catch {
-    toast("تعذر استيراد الملف؛ تأكدي أنه JSON صادر من التطبيق");
+    toast("تعذر استيراد الملف؛ تأكد أنه JSON صادر من التطبيق");
   }
 }
 
-function exportExcel() {
-  captureIdentity();
+
+function xmlEscape(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function utf8Bytes(value) {
+  return new TextEncoder().encode(String(value ?? ""));
+}
+
+const crcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(bytes) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i += 1) crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function zipDateTime(date = new Date()) {
+  const year = Math.max(1980, date.getFullYear());
+  const time = ((date.getHours() & 31) << 11) | ((date.getMinutes() & 63) << 5) | ((Math.floor(date.getSeconds() / 2)) & 31);
+  const day = ((year - 1980) << 9) | (((date.getMonth() + 1) & 15) << 5) | (date.getDate() & 31);
+  return { time, day };
+}
+
+function writeU16(view, offset, value) { view.setUint16(offset, value, true); }
+function writeU32(view, offset, value) { view.setUint32(offset, value >>> 0, true); }
+
+function makeZip(entries, mime = "application/zip") {
+  const localParts = [];
+  const centralParts = [];
+  let offset = 0;
+  const { time, day } = zipDateTime();
+
+  entries.forEach((entry) => {
+    const nameBytes = utf8Bytes(entry.name);
+    const dataBytes = entry.data instanceof Uint8Array ? entry.data : utf8Bytes(entry.data);
+    const crc = crc32(dataBytes);
+
+    const local = new Uint8Array(30 + nameBytes.length);
+    const lv = new DataView(local.buffer);
+    writeU32(lv, 0, 0x04034B50);
+    writeU16(lv, 4, 20);
+    writeU16(lv, 6, 0x0800);
+    writeU16(lv, 8, 0);
+    writeU16(lv, 10, time);
+    writeU16(lv, 12, day);
+    writeU32(lv, 14, crc);
+    writeU32(lv, 18, dataBytes.length);
+    writeU32(lv, 22, dataBytes.length);
+    writeU16(lv, 26, nameBytes.length);
+    writeU16(lv, 28, 0);
+    local.set(nameBytes, 30);
+    localParts.push(local, dataBytes);
+
+    const central = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(central.buffer);
+    writeU32(cv, 0, 0x02014B50);
+    writeU16(cv, 4, 20);
+    writeU16(cv, 6, 20);
+    writeU16(cv, 8, 0x0800);
+    writeU16(cv, 10, 0);
+    writeU16(cv, 12, time);
+    writeU16(cv, 14, day);
+    writeU32(cv, 16, crc);
+    writeU32(cv, 20, dataBytes.length);
+    writeU32(cv, 24, dataBytes.length);
+    writeU16(cv, 28, nameBytes.length);
+    writeU16(cv, 30, 0);
+    writeU16(cv, 32, 0);
+    writeU16(cv, 34, 0);
+    writeU16(cv, 36, 0);
+    writeU32(cv, 38, 0);
+    writeU32(cv, 42, offset);
+    central.set(nameBytes, 46);
+    centralParts.push(central);
+
+    offset += local.length + dataBytes.length;
+  });
+
+  const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+  const end = new Uint8Array(22);
+  const ev = new DataView(end.buffer);
+  writeU32(ev, 0, 0x06054B50);
+  writeU16(ev, 4, 0);
+  writeU16(ev, 6, 0);
+  writeU16(ev, 8, entries.length);
+  writeU16(ev, 10, entries.length);
+  writeU32(ev, 12, centralSize);
+  writeU32(ev, 16, offset);
+  writeU16(ev, 20, 0);
+
+  return new Blob([...localParts, ...centralParts, end], { type: mime });
+}
+
+function officeRows() {
   const headers = ["الأسبوع", "الفترة", "عنوان الأسبوع", "البرامج", "القيمة", "الفئة المستهدفة", "عدد المستفيدين", "المشاركون", "حالة التنفيذ", "إجراء التنفيذ", "شواهد التنفيذ", "العوائق", "ملاحظات عامة", "المشاركة %", "تحقق الهدف %", "الرضا %", "الأثر الملحوظ", "الأفكار المحددة"];
   const rows = weeks.map((week) => {
     const indicator = getIndicator(week.id);
@@ -1342,22 +1446,235 @@ function exportExcel() {
     const procedure = record.procedure || selectedProgramIdeasForWeek(week).join(" • ");
     return [week.title, `${week.dates[0]} - ${week.dates[1]}`, week.theme, program, week.value, record.targetGroup, record.beneficiaries, record.participants, status, procedure, record.evidenceText, record.obstacles, record.notes, indicator.participation, indicator.achievement, indicator.satisfaction, indicator.impactNote, selectedIdeasForWeek(week).join(" • ")];
   });
-  const excelSafe = (value) => {
-    const text = String(value ?? "");
-    return /^[=+\-@]/.test(text.trimStart()) ? `’${text}` : text;
-  };
-  const cell = (v, tag = "td") => `<${tag} style="border:1px solid #b9cbc8;padding:8px;vertical-align:top;white-space:normal">${escapeHtml(excelSafe(v))}</${tag}>`;
-  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"></head><body><table><tr><th colspan="18" style="font-size:18px;padding:12px;background:#087f79;color:#fff">التقرير الختامي — مساعد الموجه الطلابي</th></tr><tr><td colspan="3"><b>مُعدّ التقرير:</b> ${displayValue(state.report?.userName)}</td><td colspan="3"><b>إدارة التعليم:</b> ${displayValue(state.admin)}</td><td colspan="3"><b>المدرسة:</b> ${displayValue(state.school)}</td><td colspan="3"><b>مدير/ة المدرسة:</b> ${displayValue(state.report?.principalName)}</td><td colspan="3"><b>العام:</b> ${displayValue(state.report?.academicYear)}</td><td colspan="3"><b>ملاحظة:</b> لا يتضمن صور التوثيق المؤقتة</td></tr><tr>${headers.map((h) => cell(h, "th")).join("")}</tr>${rows.map((row) => `<tr>${row.map((v) => cell(v)).join("")}</tr>`).join("")}</table></body></html>`;
-  downloadBlob(`\uFEFF${html}`, "application/vnd.ms-excel;charset=utf-8", `${safeFileBase(state.school || "تقرير-التوجيه")}.xls`);
-  toast("تم تصدير التقرير بصيغة Excel");
+  return { headers, rows };
+}
+
+function excelColumnName(index) {
+  let n = index + 1;
+  let name = "";
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    name = String.fromCharCode(65 + rem) + name;
+    n = Math.floor((n - 1) / 26);
+  }
+  return name;
+}
+
+function xlsxCell(value, rowIndex, colIndex, style = 0) {
+  const ref = `${excelColumnName(colIndex)}${rowIndex}`;
+  return `<c r="${ref}" t="inlineStr"${style ? ` s="${style}"` : ""}><is><t xml:space="preserve">${xmlEscape(value)}</t></is></c>`;
+}
+
+function exportExcel() {
+  captureIdentity();
+  persistState();
+  const { headers, rows } = officeRows();
+  const meta = [
+    ["مُعدّ التقرير", state.report?.userName || "—"],
+    ["إدارة التعليم", state.admin || "—"],
+    ["اسم المدرسة", state.school || "—"],
+    ["مدير المدرسة", state.report?.principalName || "—"],
+    ["العام الدراسي", state.report?.academicYear || "—"],
+    ["الصور", "لا يتضمن صور التوثيق المؤقتة"]
+  ];
+
+  const sheetRows = [];
+  let r = 1;
+  sheetRows.push(`<row r="${r}">${xlsxCell("التقرير الختامي — مساعد الموجه الطلابي", r, 0, 2)}</row>`);
+  r += 1;
+  meta.forEach(([label, value]) => {
+    sheetRows.push(`<row r="${r}">${xlsxCell(label, r, 0, 1)}${xlsxCell(value, r, 1, 0)}</row>`);
+    r += 1;
+  });
+  sheetRows.push(`<row r="${r}">${headers.map((h, i) => xlsxCell(h, r, i, 1)).join("")}</row>`);
+  r += 1;
+  rows.forEach((row) => {
+    sheetRows.push(`<row r="${r}">${row.map((v, i) => xlsxCell(v, r, i, 0)).join("")}</row>`);
+    r += 1;
+  });
+
+  const columns = Array.from({ length: headers.length }, (_, i) => `<col min="${i + 1}" max="${i + 1}" width="${i < 2 ? 18 : i < 9 ? 23 : 32}" customWidth="1"/>`).join("");
+  const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews>
+  <cols>${columns}</cols>
+  <sheetData>${sheetRows.join("")}</sheetData>
+</worksheet>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="3">
+    <font><sz val="11"/><name val="Arial"/></font>
+    <font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Arial"/></font>
+    <font><b/><color rgb="FFFFFFFF"/><sz val="16"/><name val="Arial"/></font>
+  </fonts>
+  <fills count="4">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF087F79"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF0F9B93"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border><left style="thin"><color rgb="FFD6E5E2"/></left><right style="thin"><color rgb="FFD6E5E2"/></right><top style="thin"><color rgb="FFD6E5E2"/></top><bottom style="thin"><color rgb="FFD6E5E2"/></bottom><diagonal/></border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="3">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="top" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf>
+  </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <bookViews><workbookView/></bookViews>
+  <sheets><sheet name="التقرير الختامي" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`;
+
+  const entries = [
+    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>` },
+    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name: "xl/workbook.xml", data: workbookXml },
+    { name: "xl/_rels/workbook.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+    { name: "xl/worksheets/sheet1.xml", data: sheetXml },
+    { name: "xl/styles.xml", data: stylesXml }
+  ];
+
+  const blob = makeZip(entries, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  downloadBlob(blob, blob.type, `${safeFileBase(state.school || "تقرير-التوجيه")}.xlsx`);
+  toast("تم تصدير ملف Excel حقيقي بصيغة XLSX");
+}
+
+function dataUrlToBytes(dataUrl) {
+  const match = /^data:([^;,]+);base64,(.+)$/i.exec(dataUrl || "");
+  if (!match) return null;
+  const binary = atob(match[2]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return { mime: match[1].toLowerCase(), bytes };
+}
+
+function defaultLogoJpegDataUrl() {
+  try {
+    const image = document.querySelector("#headerLogo");
+    if (!image || !image.complete || !image.naturalWidth) return "";
+    const canvas = document.createElement("canvas");
+    canvas.width = 320;
+    canvas.height = 320;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.88);
+  } catch {
+    return "";
+  }
+}
+
+function docxRun(text, { bold = false, size = 22 } = {}) {
+  return `<w:r><w:rPr><w:rtl/><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${bold ? "<w:b/>" : ""}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r>`;
+}
+
+function docxParagraph(text, options = {}) {
+  const { bold = false, size = 22, center = false, spacingAfter = 100 } = options;
+  return `<w:p><w:pPr><w:bidi/><w:jc w:val="${center ? "center" : "right"}"/><w:spacing w:after="${spacingAfter}"/></w:pPr>${docxRun(text, { bold, size })}</w:p>`;
+}
+
+function docxInfoTable(rows) {
+  const body = rows.map(([label, value]) => `<w:tr>
+    <w:tc><w:tcPr><w:tcW w:w="2600" w:type="dxa"/><w:shd w:fill="EAF7F4"/></w:tcPr>${docxParagraph(label, { bold: true, spacingAfter: 0 })}</w:tc>
+    <w:tc><w:tcPr><w:tcW w:w="6600" w:type="dxa"/></w:tcPr>${docxParagraph(value || "—", { spacingAfter: 0 })}</w:tc>
+  </w:tr>`).join("");
+  return `<w:tbl><w:tblPr><w:tblW w:w="9200" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="D6E5E2"/><w:left w:val="single" w:sz="4" w:color="D6E5E2"/><w:bottom w:val="single" w:sz="4" w:color="D6E5E2"/><w:right w:val="single" w:sz="4" w:color="D6E5E2"/><w:insideH w:val="single" w:sz="4" w:color="D6E5E2"/><w:insideV w:val="single" w:sz="4" w:color="D6E5E2"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2600"/><w:gridCol w:w="6600"/></w:tblGrid>${body}</w:tbl>`;
+}
+
+function docxLogoParagraph() {
+  return `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="914400" cy="914400"/><wp:docPr id="1" name="شعار التقرير"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="logo.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
 }
 
 function exportWord() {
   captureIdentity();
-  const html = buildFinalReportHtml({ autoPrint: false, includePhotos: true });
-  downloadBlob(`\uFEFF${html}`, "application/msword;charset=utf-8", `${safeFileBase(state.school || "تقرير-التوجيه")}.doc`);
-  toast("تم تصدير التقرير بصيغة Word");
+  persistState();
+  const logoData = dataUrlToBytes(state.report?.logoDataUrl || defaultLogoJpegDataUrl());
+  const metaRows = [
+    ["اسم مُعدّ التقرير", state.report?.userName || "—"],
+    ["إدارة التعليم", state.admin || "—"],
+    ["اسم المدرسة", state.school || "—"],
+    ["مدير المدرسة", state.report?.principalName || "—"],
+    ["العام الدراسي", state.report?.academicYear || "—"]
+  ];
+
+  const weekSections = weeks.map((week) => {
+    const indicator = getIndicator(week.id);
+    const record = getNoorRecord(week.id);
+    const status = state.completed[completionKey(week.id)] ? "تم التنفيذ" : "قيد التنفيذ";
+    const program = record.program || week.programs.join("، ");
+    const procedure = record.procedure || selectedProgramIdeasForWeek(week).join(" • ");
+    const info = [
+      ["الفترة", `${week.dates[0]} - ${week.dates[1]}`],
+      ["البرنامج", program],
+      ["القيمة", week.value],
+      ["الفئة المستهدفة", record.targetGroup],
+      ["عدد المستفيدين", record.beneficiaries],
+      ["المشاركون", record.participants],
+      ["حالة التنفيذ", status],
+      ["إجراء التنفيذ", procedure],
+      ["شواهد التنفيذ", record.evidenceText],
+      ["العوائق", record.obstacles],
+      ["ملاحظات عامة", record.notes],
+      ["المشاركة", `${indicator.participation || 0}%`],
+      ["تحقق الهدف", `${indicator.achievement || 0}%`],
+      ["الرضا", `${indicator.satisfaction || 0}%`],
+      ["الأثر الملحوظ", indicator.impactNote],
+      ["الأفكار المحددة", selectedIdeasForWeek(week).join(" • ")]
+    ];
+    return `${docxParagraph(`${week.title} — ${week.theme}`, { bold: true, size: 28, spacingAfter: 120 })}${docxInfoTable(info)}${docxParagraph("", { spacingAfter: 160 })}`;
+  }).join("");
+
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+<w:body>
+${logoData ? docxLogoParagraph() : ""}
+${docxParagraph("التقرير الختامي — «أثري يبدأ مني»", { bold: true, size: 34, center: true, spacingAfter: 80 })}
+${docxParagraph("الخطة التفاعلية لبرامج التوجيه الطلابي والقيم", { size: 24, center: true, spacingAfter: 180 })}
+${docxInfoTable(metaRows)}
+${docxParagraph("", { spacingAfter: 180 })}
+${weekSections}
+${docxParagraph("أ/ فاطمة هزازي", { bold: true, size: 24, center: true, spacingAfter: 0 })}
+<w:sectPr><w:bidi/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:right="900" w:bottom="900" w:left="900" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr>
+</w:body></w:document>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+${logoData ? '<Default Extension="jpg" ContentType="image/jpeg"/>' : ""}
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:rtl/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:bidi/><w:jc w:val="right"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+
+  const rels = [`<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`];
+  if (logoData) rels.unshift(`<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.jpg"/>`);
+
+  const entries = [
+    { name: "[Content_Types].xml", data: contentTypes },
+    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>` },
+    { name: "word/document.xml", data: documentXml },
+    { name: "word/styles.xml", data: stylesXml },
+    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join("")}</Relationships>` }
+  ];
+  if (logoData) entries.push({ name: "word/media/logo.jpg", data: logoData.bytes });
+
+  const blob = makeZip(entries, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  downloadBlob(blob, blob.type, `${safeFileBase(state.school || "تقرير-التوجيه")}.docx`);
+  toast("تم تصدير ملف Word حقيقي بصيغة DOCX");
 }
+
 
 async function processReportLogo(file) {
   if (!file || !allowedImageTypes.has(file.type) || file.size > MAX_LOGO_FILE_SIZE) throw new Error("ملف شعار غير صالح");
@@ -1375,11 +1692,9 @@ function refreshReportSettingsUI() {
   if (school) school.value = state.school || "";
   if (principal) principal.value = state.report?.principalName || "";
   if (year) year.value = state.report?.academicYear || "";
-  const logo = state.report?.logoDataUrl || "icon-192.png";
+  const logo = state.report?.logoDataUrl || "forum-logo.png";
   const preview = document.querySelector("#reportLogoPreview");
-  const header = document.querySelector("#headerLogo");
   if (preview) preview.src = logo;
-  if (header) header.src = logo;
 }
 
 function wireReportSettings() {
@@ -1410,7 +1725,7 @@ function wireReportSettings() {
     state.report.logoDataUrl = "";
     state.report.logoName = "";
     refreshReportSettingsUI();
-    toast("تمت استعادة شعار التطبيق الافتراضي");
+    toast("تمت استعادة شعار الملتقى الافتراضي");
   });
 
   document.querySelector("#saveReportSettingsBtn")?.addEventListener("click", () => {
@@ -1419,10 +1734,6 @@ function wireReportSettings() {
     state.school = safeString(document.querySelector("#reportSchoolName")?.value, 120);
     state.report.principalName = safeString(document.querySelector("#reportPrincipalName")?.value, 120);
     state.report.academicYear = safeString(document.querySelector("#reportAcademicYear")?.value, 60);
-    const adminInput = document.querySelector("#educationAdmin");
-    const schoolInput = document.querySelector("#schoolName");
-    if (adminInput) adminInput.value = state.admin;
-    if (schoolInput) schoolInput.value = state.school;
     persistState("تم حفظ إعدادات التقرير");
     refreshReportSettingsUI();
     dialog?.close();
@@ -1471,7 +1782,7 @@ function wireToolbar() {
   });
 
   document.querySelector("#resetBtn")?.addEventListener("click", async () => {
-    if (!confirm("سيتم حذف جميع بيانات الخطة وإعدادات التقرير من هذا الجهاز، كما ستُمسح صور التوثيق المؤقتة. هل تريدين المتابعة؟")) return;
+    if (!confirm("سيتم حذف جميع بيانات الخطة وإعدادات التقرير من هذا الجهاز، كما ستُمسح صور التوثيق المؤقتة. هل تريد المتابعة؟")) return;
     localStorage.removeItem(storageKey);
     clearEvidenceCache();
     await purgeLegacyEvidenceDB();
@@ -1480,18 +1791,7 @@ function wireToolbar() {
 }
 
 function wireIdentity() {
-  const admin = document.querySelector("#educationAdmin");
-  const school = document.querySelector("#schoolName");
-  admin.value = state.admin || "";
-  school.value = state.school || "";
-  let timer;
-  [admin, school].forEach((input) => input.addEventListener("input", () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      persistState();
-      setStatus("تم الحفظ تلقائيًا");
-    }, 450);
-  }));
+  // بيانات الإدارة والمدرسة تُدار من نافذة إعدادات التقرير فقط.
 }
 
 function wirePWA() {
