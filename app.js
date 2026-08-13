@@ -1165,7 +1165,7 @@ function selectedIdeasForWeek(week) {
 
 function reportCss() {
   return `
-    @page{size:A4;margin:12mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;direction:rtl;color:#173638;margin:0;background:#fff;line-height:1.75}.report-header{display:grid;grid-template-columns:88px 1fr;gap:16px;align-items:center;padding:20px;border-radius:18px;background:linear-gradient(120deg,#14958f,#056862);color:#fff;margin-bottom:16px}.report-header img{width:78px;height:78px;object-fit:contain;border-radius:16px;background:#fff;padding:6px}.report-header h1{margin:0 0 5px;font-size:22px}.report-header p{margin:2px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:13px 0}.meta div,.box{border:1px solid #d9e7e4;border-radius:12px;padding:11px;background:#fbfefd}.box{margin:11px 0;break-inside:avoid}.box h2{font-size:16px;color:#086b67;margin:0 0 9px}.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.data-item{padding:9px 10px;border-radius:9px;background:#f3f9f7;border:1px solid #e0ece9}.data-item.wide{grid-column:1/-1}ul{margin:0;padding-right:22px;line-height:1.9}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{text-align:center;padding:11px;border-radius:10px;background:#eff8f6}.metric b{display:block;font-size:19px;color:#065c58}.photos{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.photos img{width:100%;height:170px;object-fit:cover;border-radius:10px;border:1px solid #dde8e5}.week-summary{break-inside:avoid;border:1px solid #dbe6e3;border-radius:13px;padding:13px;margin:11px 0}.week-summary h2{margin:0 0 8px;color:#086b67}.status{display:inline-block;padding:5px 9px;border-radius:999px;background:#eaf7f4;color:#065c58;font-weight:bold}.disclaimer{padding:9px 11px;border-radius:10px;background:#fff8e8;border:1px solid #ead9ad;color:#6b5727;font-size:12px}.muted{color:#6a7d7d}footer{text-align:center;margin-top:20px;padding-top:11px;border-top:1px solid #dfe8e6;font-weight:bold;color:#086b67}@media(max-width:600px){.meta,.data-grid{grid-template-columns:1fr}.report-header{grid-template-columns:65px 1fr}.report-header img{width:58px;height:58px}}@media print{.no-print{display:none!important}}`;
+    @page{size:A4;margin:12mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;direction:rtl;color:#173638;margin:0;background:#fff;line-height:1.75}.report-header{display:grid;grid-template-columns:88px 1fr;gap:16px;align-items:center;padding:20px;border-radius:18px;background:linear-gradient(120deg,#14958f,#056862);color:#fff;margin-bottom:16px}.report-header img{width:78px;height:78px;object-fit:contain;border-radius:16px;background:#fff;padding:6px}.report-header h1{margin:0 0 5px;font-size:22px}.report-header p{margin:2px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:13px 0}.meta div,.box{border:1px solid #d9e7e4;border-radius:12px;padding:11px;background:#fbfefd}.box{margin:11px 0;break-inside:avoid}.box h2{font-size:16px;color:#086b67;margin:0 0 9px}.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.data-item{padding:9px 10px;border-radius:9px;background:#f3f9f7;border:1px solid #e0ece9}.data-item.wide{grid-column:1/-1}ul{margin:0;padding-right:22px;line-height:1.9}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{text-align:center;padding:11px;border-radius:10px;background:#eff8f6}.metric b{display:block;font-size:19px;color:#065c58}.photo-box{break-inside:auto}.photo-edit-hint{margin:0 0 10px;color:#607675;font-size:12px}.photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}.photos[data-photo-count="1"]{grid-template-columns:1fr}.report-photo{--photo-height:260px;margin:0;position:relative;min-width:0;padding:8px;border:1px solid #d9e8e5;border-radius:12px;background:#f8fbfa;break-inside:avoid;page-break-inside:avoid}.report-photo.is-wide{grid-column:1/-1}.report-photo img{display:block;width:100%;height:var(--photo-height);max-height:360px;object-fit:contain;object-position:center;border-radius:9px;background:#fff;border:1px solid #e0eae8}.report-photo figcaption{text-align:center;color:#667b79;font-size:11px;padding-top:5px}.report-photo.is-selected{outline:3px solid #15958e;outline-offset:2px}.report-photo.is-cover img{object-fit:cover}.pdf-toolbar{position:sticky;top:0;z-index:999;display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0 0 14px;padding:10px;border:1px solid #cee2df;border-radius:14px;background:rgba(255,255,255,.97);box-shadow:0 10px 30px rgba(4,79,75,.14)}.pdf-toolbar button{border:1px solid #cfe1de;border-radius:10px;padding:8px 10px;background:#fff;color:#075f5b;font-weight:700;cursor:pointer}.pdf-toolbar button.primary{background:#0b8f88;color:#fff;border-color:#0b8f88}.pdf-toolbar .pdf-tip{flex:1 1 100%;font-size:11px;color:#607675}.pdf-toolbar button:disabled{opacity:.45;cursor:not-allowed}.pdf-preview-note{padding:8px 10px;border-radius:10px;background:#edf8f6;color:#386462;font-size:12px;margin-bottom:10px}.week-summary{break-inside:avoid;border:1px solid #dbe6e3;border-radius:13px;padding:13px;margin:11px 0}.week-summary h2{margin:0 0 8px;color:#086b67}.status{display:inline-block;padding:5px 9px;border-radius:999px;background:#eaf7f4;color:#065c58;font-weight:bold}.disclaimer{padding:9px 11px;border-radius:10px;background:#fff8e8;border:1px solid #ead9ad;color:#6b5727;font-size:12px}.muted{color:#6a7d7d}footer{text-align:center;margin-top:20px;padding-top:11px;border-top:1px solid #dfe8e6;font-weight:bold;color:#086b67}@media(max-width:600px){.meta,.data-grid{grid-template-columns:1fr}.report-header{grid-template-columns:65px 1fr}.report-header img{width:58px;height:58px}}@media print{.no-print,.pdf-toolbar,.pdf-preview-note{display:none!important}.photo-box{break-inside:auto}.report-photo{break-inside:avoid;page-break-inside:avoid}.report-photo img{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
 }
 
 function displayValue(value) {
@@ -1223,7 +1223,7 @@ function buildWeekSummaryHtml(week, { includePhotos = false, detailed = false } 
       <div class="data-item wide"><b>ملاحظات عامة:</b> ${displayValue(record.notes)}</div>
       ${(programNote || valueNote) ? `<div class="data-item wide"><b>ملاحظات الخطة:</b> ${programNote ? escapeHtml(programNote) : ""}${programNote && valueNote ? " — " : ""}${valueNote ? escapeHtml(valueNote) : ""}</div>` : ""}
     </div></section>
-    ${includePhotos ? `<section class="box"><h2>صور التوثيق المؤقتة</h2>${photos.length ? `<div class="photos">${photos.map((item) => `<img src="${item.dataUrl}" alt="صورة توثيق">`).join("")}</div>` : "<p>لا توجد صور توثيق مؤقتة.</p>"}</section>` : ""}`;
+    ${includePhotos ? `<section class="box photo-box"><h2>صور التوثيق المؤقتة</h2>${photos.length ? `<p class="photo-edit-hint no-print">اضغط على أي صورة لتحديدها، ثم عدّل ترتيبها أو حجمها من شريط أدوات المعاينة قبل حفظ PDF.</p><div class="photos photos--count-${Math.min(photos.length, 6)}" data-photo-count="${photos.length}">${photos.map((item, index) => `<figure class="report-photo${photos.length === 1 ? " is-wide" : ""}" data-report-photo="${index}" data-photo-height="260"><img src="${item.dataUrl}" alt="صورة توثيق ${index + 1}"><figcaption class="no-print">صورة ${arNum(index + 1)}</figcaption></figure>`).join("")}</div>` : "<p>لا توجد صور توثيق مؤقتة.</p>"}</section>` : ""}`;
 }
 
 async function printWeekReport(week) {
@@ -1231,21 +1231,125 @@ async function printWeekReport(week) {
   persistState();
   const win = window.open("", "_blank");
   if (!win) {
-    toast("اسمح بالنوافذ المنبثقة لطباعة التقرير");
+    toast("اسمح بالنوافذ المنبثقة لفتح معاينة التقرير");
     return;
   }
   try { win.opener = null; } catch {}
   const status = state.completed[completionKey(week.id)] ? "تم التنفيذ" : "قيد التنفيذ";
-  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير ${escapeHtml(week.title)}</title><style>${reportCss()}</style></head><body>
+  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تقرير ${escapeHtml(week.title)}</title><style>${reportCss()}</style></head><body>
+    <div class="pdf-toolbar no-print" role="toolbar" aria-label="أدوات ضبط صور التقرير">
+      <button class="primary" type="button" id="printPdfBtn">🖨️ حفظ / طباعة PDF</button>
+      <button type="button" id="oneColBtn">▣ صورة واحدة بالصف</button>
+      <button type="button" id="twoColBtn">▦ صورتان بالصف</button>
+      <button type="button" id="widePhotoBtn">↔ عرض كامل</button>
+      <button type="button" id="fitPhotoBtn">⬚ احتواء</button>
+      <button type="button" id="fillPhotoBtn">▣ ملء الإطار</button>
+      <button type="button" id="smallerPhotoBtn">− تصغير</button>
+      <button type="button" id="largerPhotoBtn">＋ تكبير</button>
+      <button type="button" id="rotatePhotoBtn">↻ تدوير</button>
+      <button type="button" id="prevPhotoBtn">← تقديم</button>
+      <button type="button" id="nextPhotoBtn">تأخير →</button>
+      <span class="pdf-tip">اضغط على الصورة أولًا لتحديدها. التعديلات هنا خاصة بمعاينة PDF الحالية ولا تغيّر الصورة الأصلية داخل التطبيق.</span>
+    </div>
+    <div class="pdf-preview-note no-print">تم تحسين التخطيط تلقائيًا: إذا كانت هناك صورة واحدة تظهر بعرض كامل، والصور لا تُقص افتراضيًا. عدّل الحجم والترتيب كما تريد ثم اختر «حفظ / طباعة PDF».</div>
     ${reportHeaderHtml(`بطاقة التوثيق الأسبوعية — ${week.title}`, week.theme)}
     ${reportIdentityMeta(`<div><b>الفترة:</b> ${escapeHtml(week.dates[0])} – ${escapeHtml(week.dates[1])}</div><div><b>الحالة:</b> <span class="status">${status}</span></div>`)}
     ${buildWeekSummaryHtml(week, { includePhotos: true, detailed: true })}
     <footer>أ/ فاطمة هزازي</footer>
-    <script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script>
+    <script>
+      (() => {
+        const grid = document.querySelector('.photos');
+        const figures = () => Array.from(document.querySelectorAll('.report-photo'));
+        let selected = null;
+
+        function choose(figure) {
+          figures().forEach((item) => item.classList.remove('is-selected'));
+          selected = figure || null;
+          if (selected) selected.classList.add('is-selected');
+          syncButtons();
+        }
+
+        function syncButtons() {
+          ['widePhotoBtn','fitPhotoBtn','fillPhotoBtn','smallerPhotoBtn','largerPhotoBtn','rotatePhotoBtn','prevPhotoBtn','nextPhotoBtn'].forEach((id) => {
+            const button = document.getElementById(id);
+            if (button) button.disabled = !selected;
+          });
+        }
+
+        figures().forEach((figure) => figure.addEventListener('click', () => choose(figure)));
+        if (figures().length) choose(figures()[0]);
+        else syncButtons();
+
+        document.getElementById('printPdfBtn')?.addEventListener('click', () => {
+          figures().forEach((item) => item.classList.remove('is-selected'));
+          window.print();
+        });
+        document.getElementById('oneColBtn')?.addEventListener('click', () => {
+          if (!grid) return;
+          grid.style.gridTemplateColumns = '1fr';
+          figures().forEach((item) => item.classList.add('is-wide'));
+        });
+        document.getElementById('twoColBtn')?.addEventListener('click', () => {
+          if (!grid) return;
+          grid.style.gridTemplateColumns = 'repeat(2,minmax(0,1fr))';
+          figures().forEach((item) => item.classList.remove('is-wide'));
+          if (figures().length === 1) figures()[0].classList.add('is-wide');
+        });
+        document.getElementById('widePhotoBtn')?.addEventListener('click', () => {
+          if (!selected) return;
+          selected.classList.toggle('is-wide');
+        });
+        document.getElementById('fitPhotoBtn')?.addEventListener('click', () => {
+          if (!selected) return;
+          selected.classList.remove('is-cover');
+        });
+        document.getElementById('fillPhotoBtn')?.addEventListener('click', () => {
+          if (!selected) return;
+          selected.classList.add('is-cover');
+        });
+        function resize(delta) {
+          if (!selected) return;
+          const current = Number(selected.dataset.photoHeight || 260);
+          const next = Math.max(140, Math.min(420, current + delta));
+          selected.dataset.photoHeight = String(next);
+          selected.style.setProperty('--photo-height', next + 'px');
+        }
+        document.getElementById('smallerPhotoBtn')?.addEventListener('click', () => resize(-40));
+        document.getElementById('largerPhotoBtn')?.addEventListener('click', () => resize(40));
+        document.getElementById('rotatePhotoBtn')?.addEventListener('click', () => {
+          if (!selected) return;
+          const img = selected.querySelector('img');
+          if (!img || !img.complete) return;
+          try {
+            const canvas = document.createElement('canvas');
+            const width = img.naturalWidth || img.width;
+            const height = img.naturalHeight || img.height;
+            canvas.width = height;
+            canvas.height = width;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(Math.PI / 2);
+            ctx.drawImage(img, -width / 2, -height / 2, width, height);
+            img.src = canvas.toDataURL('image/jpeg', .92);
+          } catch {}
+        });
+        document.getElementById('prevPhotoBtn')?.addEventListener('click', () => {
+          if (!selected || !selected.parentElement) return;
+          const previous = selected.previousElementSibling;
+          if (previous) selected.parentElement.insertBefore(selected, previous);
+        });
+        document.getElementById('nextPhotoBtn')?.addEventListener('click', () => {
+          if (!selected || !selected.parentElement) return;
+          const next = selected.nextElementSibling;
+          if (next) selected.parentElement.insertBefore(next, selected);
+        });
+      })();
+    <\/script>
   </body></html>`;
   win.document.open();
   win.document.write(html);
   win.document.close();
+  toast("فتحت معاينة PDF؛ اضبط الصور ثم احفظ التقرير");
 }
 
 function buildFinalReportHtml({ autoPrint = false, includePhotos = false } = {}) {
