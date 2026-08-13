@@ -4,8 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#087f79" />
-  <meta name="description" content="خطة تفاعلية لبرامج التوجيه الطلابي والقيم، مع أفكار تنفيذ وتوثيق وقياس أثر وتقارير قابلة للطباعة." />
-  <title>الخطة التفاعلية للتوجيه الطلابي والقيم</title>
+  <meta name="description" content="مساعد تفاعلي آمن للتخطيط لبرامج التوجيه الطلابي والقيم، مع بنك أفكار، مؤشرات أثر، تقارير قابلة للتصدير، ومساعد توثيق منظم." />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; media-src 'none'; frame-src 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <title>مساعد الموجه الطلابي | الخطة التفاعلية</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -15,6 +17,11 @@
   <div class="app-shell">
     <header class="hero" aria-label="رأس الخطة">
       <div class="hero__pattern" aria-hidden="true"></div>
+
+      <div class="hero-logo" aria-label="شعار التطبيق">
+        <img id="headerLogo" src="icon-192.png" alt="شعار مساعد الموجه الطلابي" />
+      </div>
+
       <div class="brand">
         <div class="brand__mark" aria-hidden="true">
           <span></span><span></span><span></span><span></span><span></span>
@@ -31,11 +38,11 @@
       <div class="identity-card">
         <label>
           <span>إدارة التعليم</span>
-          <input id="educationAdmin" type="text" inputmode="text" placeholder="اكتبي اسم الإدارة" autocomplete="off" />
+          <input id="educationAdmin" type="text" inputmode="text" maxlength="120" placeholder="اكتبي اسم الإدارة" autocomplete="off" />
         </label>
         <label>
           <span>اسم المدرسة</span>
-          <input id="schoolName" type="text" inputmode="text" placeholder="اكتبي اسم المدرسة" autocomplete="off" />
+          <input id="schoolName" type="text" inputmode="text" maxlength="120" placeholder="اكتبي اسم المدرسة" autocomplete="off" />
         </label>
       </div>
     </header>
@@ -45,13 +52,28 @@
         <button class="btn btn--primary" id="saveBtn" type="button">💾 حفظ البيانات</button>
         <button class="btn" id="printBtn" type="button">🖨️ طباعة الخطة / PDF</button>
         <button class="btn" id="printFinalReportBtn" type="button">📄 التقرير الختامي</button>
+        <button class="btn btn--soft" id="reportSettingsBtn" type="button">⚙️ إعدادات التقرير</button>
+
+        <details class="export-menu" id="exportMenu">
+          <summary class="btn">📤 تصدير / استيراد</summary>
+          <div class="export-menu__panel">
+            <button type="button" id="exportJsonBtn">JSON ⬇️</button>
+            <button type="button" id="importJsonBtn">JSON ⬆️ استيراد</button>
+            <button type="button" id="exportExcelBtn">Excel (.xls)</button>
+            <button type="button" id="exportWordBtn">Word (.doc)</button>
+            <small>ملف JSON لا يتضمن صور التوثيق المؤقتة.</small>
+          </div>
+        </details>
+
+        <a class="btn btn--noor" href="https://noor.moe.gov.sa/" target="_blank" rel="noopener noreferrer">↗ فتح نظام نور الرسمي</a>
         <button class="btn" id="installBtn" type="button" hidden>📲 تثبيت التطبيق</button>
       </div>
       <div class="toolbar__group">
         <button class="btn btn--soft" id="expandAllBtn" type="button">⌄ فتح جميع الأفكار</button>
-        <button class="btn btn--danger" id="resetBtn" type="button">↺ إعادة ضبط</button>
+        <button class="btn btn--danger" id="resetBtn" type="button">🗑 مسح جميع البيانات</button>
       </div>
       <div class="save-status" id="saveStatus" role="status" aria-live="polite">جاهز</div>
+      <input id="jsonImportInput" class="visually-hidden" type="file" accept=".json,application/json" />
     </section>
 
     <main>
@@ -59,16 +81,26 @@
         <div>
           <span class="eyebrow">هوية الخطة</span>
           <h2>«أثري يبدأ مني»</h2>
-          <p>لكل أسبوع برامج وفعاليات وقيمة مستهدفة، مع أفكار تنفيذية، متابعة الإنجاز، قياس الأثر، صور التوثيق، وتقارير قابلة للطباعة.</p>
+          <p>لكل أسبوع برامج وفعاليات وقيمة مستهدفة، مع أفكار تنفيذية، متابعة الإنجاز، قياس الأثر، وتجهيز منظم للبيانات التي يحتاجها الموجه عند التوثيق الرسمي.</p>
         </div>
         <div class="legend" aria-label="دليل الرموز">
           <span>🎯 برامج</span>
           <span>💡 أفكار تنفيذ</span>
           <span>💎 قيم</span>
-          <span>📸 توثيق</span>
+          <span>📸 توثيق مؤقت</span>
           <span>📊 قياس أثر</span>
+          <span>🧾 مساعد التوثيق</span>
         </div>
       </section>
+
+      <details class="privacy-card">
+        <summary>🔒 الخصوصية والاستخدام الآمن</summary>
+        <div class="privacy-card__body">
+          <p><strong>هذا التطبيق مساعد للتخطيط والتوثيق، وليس مرتبطًا تقنيًا بنظام نور ولا يرسل إليه أي بيانات.</strong></p>
+          <p>استخدمي معلومات عامة وإحصائية فقط. لا تدخلي أسماء الطلاب أو الطالبات، أرقام الهوية، بيانات التواصل، بيانات الدخول لنور، أو تفاصيل الحالات الصحية أو السلوكية أو الأسرية الفردية.</p>
+          <p><strong>صور التوثيق مؤقتة في الذاكرة ولا تُحفظ بعد تحديث الصفحة أو إغلاقها.</strong> لا ترفعي صورًا يظهر فيها أشخاص يمكن التعرف عليهم. التصدير إلى PDF أو Word ينشئ ملفًا مستقلًا على جهاز المستخدم ويجب التعامل معه وفق ضوابط الجهة.</p>
+        </div>
+      </details>
 
       <section class="achievement-section" aria-labelledby="achievementTitle">
         <div class="section-title">
@@ -119,6 +151,48 @@
       <strong>أ/ فاطمة هزازي</strong>
     </footer>
   </div>
+
+  <dialog class="report-settings" id="reportSettingsDialog" aria-labelledby="reportSettingsTitle">
+    <div class="dialog-head">
+      <div>
+        <span class="eyebrow">هوية التقرير</span>
+        <h2 id="reportSettingsTitle">إعدادات التقرير</h2>
+      </div>
+      <button class="dialog-close" id="closeReportSettingsBtn" type="button" aria-label="إغلاق">×</button>
+    </div>
+    <div class="report-settings__grid">
+      <label><span>اسم مُعدّ/ة التقرير</span><input id="reportUserName" type="text" maxlength="120" placeholder="الاسم" /></label>
+      <label><span>إدارة التعليم</span><input id="reportEducationAdmin" type="text" maxlength="120" placeholder="إدارة التعليم" /></label>
+      <label><span>اسم المدرسة</span><input id="reportSchoolName" type="text" maxlength="120" placeholder="اسم المدرسة" /></label>
+      <label><span>مدير/ة المدرسة</span><input id="reportPrincipalName" type="text" maxlength="120" placeholder="اسم مدير/ة المدرسة" /></label>
+      <label><span>العام الدراسي (اختياري)</span><input id="reportAcademicYear" type="text" maxlength="60" placeholder="مثال: ١٤٤٨هـ" /></label>
+    </div>
+    <div class="logo-settings">
+      <div class="logo-settings__preview"><img id="reportLogoPreview" src="icon-192.png" alt="معاينة شعار التقرير" /></div>
+      <div class="logo-settings__actions">
+        <strong>شعار التقرير</strong>
+        <p>PNG أو JPEG أو WebP فقط، بحد أقصى ٢ م.ب. تتم إعادة معالجة الصورة لإزالة البيانات الوصفية غير الضرورية.</p>
+        <label class="btn btn--soft">🖼️ اختيار شعار<input id="reportLogoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden /></label>
+        <button class="btn" id="resetReportLogoBtn" type="button">استخدام شعار التطبيق الافتراضي</button>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn" id="cancelReportSettingsBtn" type="button">إغلاق</button>
+      <button class="btn btn--primary" id="saveReportSettingsBtn" type="button">حفظ إعدادات التقرير</button>
+    </div>
+  </dialog>
+
+  <dialog class="privacy-gate" id="privacyGate" aria-labelledby="privacyGateTitle">
+    <div class="privacy-gate__icon">🔒</div>
+    <h2 id="privacyGateTitle">الاستخدام الآمن للتطبيق</h2>
+    <p>هذا التطبيق مخصص للتخطيط والتوثيق العام فقط. لا تدخلي بيانات شخصية أو حساسة للطلاب والطالبات، ولا بيانات دخول الأنظمة الرسمية.</p>
+    <ul>
+      <li>الصور المضافة للتوثيق مؤقتة ولا تُحفظ بعد إغلاق الصفحة أو تحديثها.</li>
+      <li>JSON لا يصدّر صور التوثيق.</li>
+      <li>تصدير PDF أو Word أو Excel ينشئ ملفًا محليًا على جهازك؛ احفظيه وشاركيه وفق ضوابط الجهة.</li>
+    </ul>
+    <button class="btn btn--primary" id="acceptPrivacyBtn" type="button">أوافق وأبدأ</button>
+  </dialog>
 
   <script src="app.js" defer></script>
 </body>
