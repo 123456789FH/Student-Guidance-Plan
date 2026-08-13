@@ -843,5 +843,5 @@ main { margin-top: 20px; }
 }
 
 
-/* v6 weekly export actions */
-.report-export-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.report-export-actions .btn{flex:1 1 180px;justify-content:center}
+/* v7 week export menu */
+.report-export-actions{display:block;margin-top:12px}.week-report-menu{width:100%}.week-report-menu>summary{width:100%;justify-content:center}.week-report-menu>.export-menu__panel{position:static;width:100%;margin-top:8px;box-sizing:border-box}.week-report-menu .export-menu__panel button{font-size:.98rem}

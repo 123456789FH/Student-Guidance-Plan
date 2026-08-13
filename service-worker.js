@@ -1,4 +1,4 @@
-const CACHE = "student-counselor-assistant-v6";
+const CACHE = "student-counselor-assistant-v7";
 const ASSETS = [
   "./",
   "./index.html",

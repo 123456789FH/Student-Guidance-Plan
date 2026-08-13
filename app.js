@@ -783,25 +783,55 @@ function renderFollowupPanel(week) {
   const reportActions = document.createElement("div");
   reportActions.className = "report-export-actions";
 
-  const reportBtn = document.createElement("button");
-  reportBtn.type = "button";
-  reportBtn.className = "btn btn--soft report-btn";
-  reportBtn.textContent = "🧾 PDF / طباعة الأسبوع";
-  reportBtn.addEventListener("click", () => printWeekReport(week));
+  const reportMenu = document.createElement("details");
+  reportMenu.className = "export-menu week-report-menu";
 
-  const wordBtn = document.createElement("button");
-  wordBtn.type = "button";
-  wordBtn.className = "btn btn--soft";
-  wordBtn.textContent = "📝 Word للأسبوع";
-  wordBtn.addEventListener("click", () => exportWord([week]));
+  const reportSummary = document.createElement("summary");
+  reportSummary.className = "btn btn--soft report-btn";
+  reportSummary.textContent = "🧾 تقرير الأسبوع المنظم";
+  reportMenu.appendChild(reportSummary);
+
+  const reportPanel = document.createElement("div");
+  reportPanel.className = "export-menu__panel";
+
+  const pdfBtn = document.createElement("button");
+  pdfBtn.type = "button";
+  pdfBtn.textContent = "🖨️ التقرير PDF";
+  pdfBtn.addEventListener("click", () => {
+    reportMenu.open = false;
+    printWeekReport(week);
+  });
 
   const excelBtn = document.createElement("button");
   excelBtn.type = "button";
-  excelBtn.className = "btn btn--soft";
-  excelBtn.textContent = "📊 Excel للأسبوع";
-  excelBtn.addEventListener("click", () => exportExcel([week]));
+  excelBtn.textContent = "📊 التقرير Excel";
+  excelBtn.addEventListener("click", () => {
+    reportMenu.open = false;
+    exportExcel([week]);
+  });
 
-  reportActions.append(reportBtn, wordBtn, excelBtn);
+  const wordBtn = document.createElement("button");
+  wordBtn.type = "button";
+  wordBtn.textContent = "📝 التقرير Word";
+  wordBtn.addEventListener("click", () => {
+    reportMenu.open = false;
+    exportWord([week]);
+  });
+
+  const jsonBtn = document.createElement("button");
+  jsonBtn.type = "button";
+  jsonBtn.textContent = "🗂️ التقرير JSON";
+  jsonBtn.addEventListener("click", () => {
+    reportMenu.open = false;
+    exportJson([week]);
+  });
+
+  const hint = document.createElement("small");
+  hint.textContent = "PDF وWord وExcel يضمّنون صور الشواهد الحالية. JSON يصدّر بيانات الأسبوع فقط ولا يتضمن الصور المؤقتة.";
+
+  reportPanel.append(pdfBtn, excelBtn, wordBtn, jsonBtn, hint);
+  reportMenu.appendChild(reportPanel);
+  reportActions.appendChild(reportMenu);
   panel.appendChild(reportActions);
 
   updateCompleteButton(toggle, week.id);
@@ -1246,25 +1276,93 @@ function printFinalReport() {
   win.document.close();
 }
 
-function buildPortableState() {
+function cloneStateForWeeks(selection) {
+  const selectedWeeks = Array.isArray(selection) && selection.length ? selection : weeks;
+  const selectedIds = selectedWeeks.map((week) => Number(week.id));
+  const clean = blankState();
+  clean.admin = safeString(state.admin, 120);
+  clean.school = safeString(state.school, 120);
+  clean.privacyAcknowledged = Boolean(state.privacyAcknowledged);
+  clean.report = {
+    userName: safeString(state.report?.userName, 120),
+    principalName: safeString(state.report?.principalName, 120),
+    academicYear: safeString(state.report?.academicYear, 60),
+    logoDataUrl: safeString(state.report?.logoDataUrl, 5000000),
+    logoName: safeString(state.report?.logoName, 200)
+  };
+
+  const belongsToSelection = (key) => selectedIds.some((id) => String(key).startsWith(`w${id}`));
+
+  Object.entries(state.checks || {}).forEach(([key, value]) => {
+    if (belongsToSelection(key)) clean.checks[key] = Boolean(value);
+  });
+  Object.entries(state.notes || {}).forEach(([key, value]) => {
+    if (belongsToSelection(key)) clean.notes[key] = safeString(value, 1500);
+  });
+  Object.entries(state.custom || {}).forEach(([key, value]) => {
+    if (belongsToSelection(key) && Array.isArray(value)) clean.custom[key] = value.slice(0, 30).map((item) => safeString(item, 300)).filter(Boolean);
+  });
+
+  selectedWeeks.forEach((week) => {
+    const key = completionKey(week.id);
+    clean.completed[key] = Boolean(state.completed?.[key]);
+    const indicator = state.indicators?.[key] || {};
+    clean.indicators[key] = {
+      participation: normalizePercent(indicator.participation),
+      achievement: normalizePercent(indicator.achievement),
+      satisfaction: normalizePercent(indicator.satisfaction),
+      impactNote: safeString(indicator.impactNote, 1000)
+    };
+    const record = state.noor?.[key] || {};
+    clean.noor[key] = {
+      program: safeString(record.program, 600),
+      targetGroup: safeString(record.targetGroup, 200),
+      beneficiaries: safeString(record.beneficiaries, 120),
+      participants: safeString(record.participants, 300),
+      procedure: safeString(record.procedure, 1500),
+      evidenceText: safeString(record.evidenceText, 1500),
+      obstacles: safeString(record.obstacles, 1000),
+      notes: safeString(record.notes, 1000)
+    };
+  });
+
+  return clean;
+}
+
+function buildPortableState(selection = null) {
   captureIdentity();
+  const selectedWeeks = Array.isArray(selection) && selection.length ? selection : null;
   return {
     schema: exportSchema,
     version: exportVersion,
     exportedAt: new Date().toISOString(),
+    scope: selectedWeeks && selectedWeeks.length === 1 ? {
+      type: "single-week",
+      weekId: selectedWeeks[0].id,
+      weekTitle: selectedWeeks[0].title,
+      weekTheme: selectedWeeks[0].theme
+    } : {
+      type: selectedWeeks && selectedWeeks.length ? "selected-weeks" : "all-weeks"
+    },
     privacy: {
       evidencePhotosIncluded: false,
       note: "صور التوثيق المؤقتة لا تُضمّن في ملف JSON."
     },
-    data: JSON.parse(JSON.stringify(state))
+    data: JSON.parse(JSON.stringify(selectedWeeks ? cloneStateForWeeks(selectedWeeks) : state))
   };
 }
 
-function exportJson() {
+function exportJson(selection = null) {
   persistState();
-  const payload = JSON.stringify(buildPortableState(), null, 2);
-  downloadBlob(`\uFEFF${payload}`, "application/json;charset=utf-8", `${safeFileBase(state.school || "مساعد-الموجه-الطلابي")}-بيانات.json`);
-  toast("تم تصدير JSON بدون صور التوثيق المؤقتة");
+  const selectedWeeks = Array.isArray(selection) && selection.length ? selection : null;
+  const payload = JSON.stringify(buildPortableState(selection), null, 2);
+  const fileName = selectedWeeks && selectedWeeks.length
+    ? `${exportFileStem(selectedWeeks)}.json`
+    : `${safeFileBase(state.school || "مساعد-الموجه-الطلابي")}-بيانات.json`;
+  downloadBlob(`﻿${payload}`, "application/json;charset=utf-8", fileName);
+  toast(selectedWeeks && selectedWeeks.length === 1
+    ? "تم تصدير JSON لبيانات الأسبوع المحدد دون صور التوثيق"
+    : "تم تصدير JSON بدون صور التوثيق المؤقتة");
 }
 
 function sanitizedImportedState(raw) {
@@ -1847,7 +1945,7 @@ document.addEventListener("DOMContentLoaded", init);
 
 
 /* ============================================================
-   v6 — تصدير أسبوعي ذكي + تضمين صور الشواهد في Word وExcel
+   v7 — قائمة تصدير داخل تقرير الأسبوع + JSON أسبوعي
    ============================================================ */
 
 function weekHasReportData(week) {
