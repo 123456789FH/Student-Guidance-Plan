@@ -1226,16 +1226,146 @@ function buildWeekSummaryHtml(week, { includePhotos = false, detailed = false } 
     ${includePhotos ? `<section class="box photo-box"><h2>صور التوثيق المؤقتة</h2>${photos.length ? `<p class="photo-edit-hint no-print">اضغط على أي صورة لتحديدها، ثم عدّل ترتيبها أو حجمها من شريط أدوات المعاينة قبل حفظ PDF.</p><div class="photos photos--count-${Math.min(photos.length, 6)}" data-photo-count="${photos.length}">${photos.map((item, index) => `<figure class="report-photo${photos.length === 1 ? " is-wide" : ""}" data-report-photo="${index}" data-photo-height="260"><img src="${item.dataUrl}" alt="صورة توثيق ${index + 1}"><figcaption class="no-print">صورة ${arNum(index + 1)}</figcaption></figure>`).join("")}</div>` : "<p>لا توجد صور توثيق مؤقتة.</p>"}</section>` : ""}`;
 }
 
+function wirePdfPreviewWindow(win) {
+  if (!win || win.closed) return;
+  const doc = win.document;
+  const grid = doc.querySelector('.photos');
+  const figures = () => Array.from(doc.querySelectorAll('.report-photo'));
+  let selected = null;
+
+  function choose(figure) {
+    figures().forEach((item) => item.classList.remove('is-selected'));
+    selected = figure || null;
+    if (selected) selected.classList.add('is-selected');
+    syncButtons();
+  }
+
+  function syncButtons() {
+    const needsSelection = ['widePhotoBtn','fitPhotoBtn','fillPhotoBtn','smallerPhotoBtn','largerPhotoBtn','rotatePhotoBtn','prevPhotoBtn','nextPhotoBtn'];
+    needsSelection.forEach((id) => {
+      const button = doc.getElementById(id);
+      if (button) button.disabled = !selected;
+    });
+  }
+
+  function bind(id, handler) {
+    const el = doc.getElementById(id);
+    if (el) el.addEventListener('click', handler);
+  }
+
+  figures().forEach((figure) => {
+    figure.tabIndex = 0;
+    figure.setAttribute('role', 'button');
+    figure.setAttribute('aria-label', 'تحديد صورة التوثيق');
+    figure.addEventListener('click', () => choose(figure));
+    figure.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        choose(figure);
+      }
+    });
+  });
+
+  if (figures().length) choose(figures()[0]);
+  else syncButtons();
+
+  bind('printPdfBtn', () => {
+    figures().forEach((item) => item.classList.remove('is-selected'));
+    win.focus();
+    win.print();
+  });
+
+  bind('oneColBtn', () => {
+    if (!grid) return;
+    grid.style.gridTemplateColumns = '1fr';
+    figures().forEach((item) => item.classList.add('is-wide'));
+  });
+
+  bind('twoColBtn', () => {
+    if (!grid) return;
+    grid.style.gridTemplateColumns = 'repeat(2,minmax(0,1fr))';
+    figures().forEach((item) => item.classList.remove('is-wide'));
+    if (figures().length === 1) figures()[0].classList.add('is-wide');
+  });
+
+  bind('widePhotoBtn', () => {
+    if (!selected) return;
+    selected.classList.toggle('is-wide');
+  });
+
+  bind('fitPhotoBtn', () => {
+    if (!selected) return;
+    selected.classList.remove('is-cover');
+  });
+
+  bind('fillPhotoBtn', () => {
+    if (!selected) return;
+    selected.classList.add('is-cover');
+  });
+
+  function resize(delta) {
+    if (!selected) return;
+    const current = Number(selected.dataset.photoHeight || 260);
+    const next = Math.max(120, Math.min(520, current + delta));
+    selected.dataset.photoHeight = String(next);
+    selected.style.setProperty('--photo-height', `${next}px`);
+  }
+
+  bind('smallerPhotoBtn', () => resize(-40));
+  bind('largerPhotoBtn', () => resize(40));
+
+  bind('rotatePhotoBtn', async () => {
+    if (!selected) return;
+    const img = selected.querySelector('img');
+    if (!img) return;
+    try {
+      if (!img.complete && typeof img.decode === 'function') await img.decode();
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      if (!width || !height) return;
+      const canvas = doc.createElement('canvas');
+      canvas.width = height;
+      canvas.height = width;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, -width / 2, -height / 2, width, height);
+      img.src = canvas.toDataURL('image/jpeg', .92);
+      const current = Number(selected.dataset.photoHeight || 260);
+      selected.style.setProperty('--photo-height', `${current}px`);
+    } catch (error) {
+      console.warn('تعذر تدوير صورة التقرير', error);
+    }
+  });
+
+  bind('prevPhotoBtn', () => {
+    if (!selected || !selected.parentElement) return;
+    const previous = selected.previousElementSibling;
+    if (previous) selected.parentElement.insertBefore(selected, previous);
+  });
+
+  bind('nextPhotoBtn', () => {
+    if (!selected || !selected.parentElement) return;
+    const next = selected.nextElementSibling;
+    if (next) selected.parentElement.insertBefore(next, selected);
+  });
+
+  // تأكيد بصري أن أدوات المعاينة أصبحت جاهزة، مهم خصوصًا في Safari على iPad.
+  const note = doc.querySelector('.pdf-preview-note');
+  if (note) note.dataset.ready = 'true';
+}
+
 async function printWeekReport(week) {
   captureIdentity();
   persistState();
-  const win = window.open("", "_blank");
+  const win = window.open('', '_blank');
   if (!win) {
-    toast("اسمح بالنوافذ المنبثقة لفتح معاينة التقرير");
+    toast('اسمح بالنوافذ المنبثقة لفتح معاينة التقرير');
     return;
   }
   try { win.opener = null; } catch {}
-  const status = state.completed[completionKey(week.id)] ? "تم التنفيذ" : "قيد التنفيذ";
+  const status = state.completed[completionKey(week.id)] ? 'تم التنفيذ' : 'قيد التنفيذ';
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تقرير ${escapeHtml(week.title)}</title><style>${reportCss()}</style></head><body>
     <div class="pdf-toolbar no-print" role="toolbar" aria-label="أدوات ضبط صور التقرير">
       <button class="primary" type="button" id="printPdfBtn">🖨️ حفظ / طباعة PDF</button>
@@ -1251,105 +1381,28 @@ async function printWeekReport(week) {
       <button type="button" id="nextPhotoBtn">تأخير →</button>
       <span class="pdf-tip">اضغط على الصورة أولًا لتحديدها. التعديلات هنا خاصة بمعاينة PDF الحالية ولا تغيّر الصورة الأصلية داخل التطبيق.</span>
     </div>
-    <div class="pdf-preview-note no-print">تم تحسين التخطيط تلقائيًا: إذا كانت هناك صورة واحدة تظهر بعرض كامل، والصور لا تُقص افتراضيًا. عدّل الحجم والترتيب كما تريد ثم اختر «حفظ / طباعة PDF».</div>
+    <div class="pdf-preview-note no-print">اختر صورة ثم استخدم الأزرار لتعديل الحجم أو العرض أو الترتيب، وبعدها اختر «حفظ / طباعة PDF».</div>
     ${reportHeaderHtml(`بطاقة التوثيق الأسبوعية — ${week.title}`, week.theme)}
     ${reportIdentityMeta(`<div><b>الفترة:</b> ${escapeHtml(week.dates[0])} – ${escapeHtml(week.dates[1])}</div><div><b>الحالة:</b> <span class="status">${status}</span></div>`)}
     ${buildWeekSummaryHtml(week, { includePhotos: true, detailed: true })}
     <footer>أ/ فاطمة هزازي</footer>
-    <script>
-      (() => {
-        const grid = document.querySelector('.photos');
-        const figures = () => Array.from(document.querySelectorAll('.report-photo'));
-        let selected = null;
-
-        function choose(figure) {
-          figures().forEach((item) => item.classList.remove('is-selected'));
-          selected = figure || null;
-          if (selected) selected.classList.add('is-selected');
-          syncButtons();
-        }
-
-        function syncButtons() {
-          ['widePhotoBtn','fitPhotoBtn','fillPhotoBtn','smallerPhotoBtn','largerPhotoBtn','rotatePhotoBtn','prevPhotoBtn','nextPhotoBtn'].forEach((id) => {
-            const button = document.getElementById(id);
-            if (button) button.disabled = !selected;
-          });
-        }
-
-        figures().forEach((figure) => figure.addEventListener('click', () => choose(figure)));
-        if (figures().length) choose(figures()[0]);
-        else syncButtons();
-
-        document.getElementById('printPdfBtn')?.addEventListener('click', () => {
-          figures().forEach((item) => item.classList.remove('is-selected'));
-          window.print();
-        });
-        document.getElementById('oneColBtn')?.addEventListener('click', () => {
-          if (!grid) return;
-          grid.style.gridTemplateColumns = '1fr';
-          figures().forEach((item) => item.classList.add('is-wide'));
-        });
-        document.getElementById('twoColBtn')?.addEventListener('click', () => {
-          if (!grid) return;
-          grid.style.gridTemplateColumns = 'repeat(2,minmax(0,1fr))';
-          figures().forEach((item) => item.classList.remove('is-wide'));
-          if (figures().length === 1) figures()[0].classList.add('is-wide');
-        });
-        document.getElementById('widePhotoBtn')?.addEventListener('click', () => {
-          if (!selected) return;
-          selected.classList.toggle('is-wide');
-        });
-        document.getElementById('fitPhotoBtn')?.addEventListener('click', () => {
-          if (!selected) return;
-          selected.classList.remove('is-cover');
-        });
-        document.getElementById('fillPhotoBtn')?.addEventListener('click', () => {
-          if (!selected) return;
-          selected.classList.add('is-cover');
-        });
-        function resize(delta) {
-          if (!selected) return;
-          const current = Number(selected.dataset.photoHeight || 260);
-          const next = Math.max(140, Math.min(420, current + delta));
-          selected.dataset.photoHeight = String(next);
-          selected.style.setProperty('--photo-height', next + 'px');
-        }
-        document.getElementById('smallerPhotoBtn')?.addEventListener('click', () => resize(-40));
-        document.getElementById('largerPhotoBtn')?.addEventListener('click', () => resize(40));
-        document.getElementById('rotatePhotoBtn')?.addEventListener('click', () => {
-          if (!selected) return;
-          const img = selected.querySelector('img');
-          if (!img || !img.complete) return;
-          try {
-            const canvas = document.createElement('canvas');
-            const width = img.naturalWidth || img.width;
-            const height = img.naturalHeight || img.height;
-            canvas.width = height;
-            canvas.height = width;
-            const ctx = canvas.getContext('2d');
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(Math.PI / 2);
-            ctx.drawImage(img, -width / 2, -height / 2, width, height);
-            img.src = canvas.toDataURL('image/jpeg', .92);
-          } catch {}
-        });
-        document.getElementById('prevPhotoBtn')?.addEventListener('click', () => {
-          if (!selected || !selected.parentElement) return;
-          const previous = selected.previousElementSibling;
-          if (previous) selected.parentElement.insertBefore(selected, previous);
-        });
-        document.getElementById('nextPhotoBtn')?.addEventListener('click', () => {
-          if (!selected || !selected.parentElement) return;
-          const next = selected.nextElementSibling;
-          if (next) selected.parentElement.insertBefore(next, selected);
-        });
-      })();
-    <\/script>
   </body></html>`;
   win.document.open();
   win.document.write(html);
   win.document.close();
-  toast("فتحت معاينة PDF؛ اضبط الصور ثم احفظ التقرير");
+
+  // لا نستخدم JavaScript مضمّنًا داخل نافذة التقرير؛ سياسة CSP تمنعه على Safari.
+  // بدلاً من ذلك نربط الأزرار مباشرة من التطبيق الأصلي بعد إنشاء النافذة.
+  setTimeout(() => {
+    try {
+      wirePdfPreviewWindow(win);
+      win.focus();
+    } catch (error) {
+      console.error('تعذر تفعيل أدوات معاينة PDF', error);
+    }
+  }, 30);
+
+  toast('فتحت معاينة PDF؛ أصبحت أدوات تعديل الصور مفعّلة');
 }
 
 function buildFinalReportHtml({ autoPrint = false, includePhotos = false } = {}) {
@@ -1376,8 +1429,11 @@ function printFinalReport() {
   }
   try { win.opener = null; } catch {}
   win.document.open();
-  win.document.write(buildFinalReportHtml({ autoPrint: true, includePhotos: false }));
+  win.document.write(buildFinalReportHtml({ autoPrint: false, includePhotos: false }));
   win.document.close();
+  setTimeout(() => {
+    try { win.focus(); win.print(); } catch {}
+  }, 180);
 }
 
 function cloneStateForWeeks(selection) {
