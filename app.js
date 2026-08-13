@@ -804,7 +804,7 @@ function renderFollowupPanel(week) {
 
   const excelBtn = document.createElement("button");
   excelBtn.type = "button";
-  excelBtn.textContent = "📊 التقرير Excel";
+  excelBtn.textContent = "📊 تقرير Excel احترافي";
   excelBtn.addEventListener("click", () => {
     reportMenu.open = false;
     exportExcel([week]);
@@ -2291,8 +2291,24 @@ function xlsxSafeSheetName(value, fallback) {
   return name || fallback || "تقرير";
 }
 
-function xlsxDrawingPicture({ relId, id, name, col = 0, row = 0, cx, cy }) {
-  return `<oneCellAnchor><from><col>${col}</col><colOff>0</colOff><row>${row}</row><rowOff>0</rowOff></from><ext cx="${cx}" cy="${cy}"/><pic><nvPicPr><cNvPr id="${id}" name="${xmlEscape(name)}" descr="${xmlEscape(name)}"/><cNvPicPr/></nvPicPr><blipFill><a:blip xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" cstate="print" r:embed="${relId}"/><a:stretch xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:fillRect/></a:stretch></blipFill><spPr><a:prstGeom xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" prst="rect"/></spPr></pic><clientData/></oneCellAnchor>`;
+function xlsxDrawingPicture({ relId, id, name, col = 0, row = 0, cx, cy, colOff = 0, rowOff = 0 }) {
+  return `<oneCellAnchor><from><col>${col}</col><colOff>${Math.max(0, Number(colOff) || 0)}</colOff><row>${row}</row><rowOff>${Math.max(0, Number(rowOff) || 0)}</rowOff></from><ext cx="${cx}" cy="${cy}"/><pic><nvPicPr><cNvPr id="${id}" name="${xmlEscape(name)}" descr="${xmlEscape(name)}"/><cNvPicPr/></nvPicPr><blipFill><a:blip xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" cstate="print" r:embed="${relId}"/><a:stretch xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:fillRect/></a:stretch></blipFill><spPr><a:prstGeom xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" prst="rect"/></spPr></pic><clientData/></oneCellAnchor>`;
+}
+
+function xlsxNumberCell(value, rowIndex, colIndex, style = 0) {
+  const ref = `${excelColumnName(colIndex)}${rowIndex}`;
+  const num = Number(value);
+  return `<c r="${ref}"${style ? ` s="${style}"` : ""}><v>${Number.isFinite(num) ? num : 0}</v></c>`;
+}
+
+function xlsxMergedCell(value, rowIndex, colIndex, style = 0) {
+  return xlsxCell(value == null || value === "" ? "—" : value, rowIndex, colIndex, style);
+}
+
+function excelPercentValue(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return null;
+  return Math.max(0, Math.min(100, num)) / 100;
 }
 
 async function exportExcel(selection = null) {
@@ -2300,14 +2316,73 @@ async function exportExcel(selection = null) {
   persistState();
   const selectedWeeks = exportableWeeks(selection);
   if (!selectedWeeks.length) return;
-  setStatus("جارٍ تجهيز ملف Excel مع صور الشواهد…");
+  setStatus("جارٍ تجهيز تقرير Excel احترافي للطباعة A4…");
 
-  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Arial"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Arial"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="16"/><name val="Arial"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF087F79"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0F9B93"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD6E5E2"/></left><right style="thin"><color rgb="FFD6E5E2"/></right><top style="thin"><color rgb="FFD6E5E2"/></top><bottom style="thin"><color rgb="FFD6E5E2"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  // تنسيق احترافي ومهيأ للطباعة: RTL + A4 + صفحة واحدة قدر الإمكان.
+  // style indices:
+  // 0 body, 1 label, 2 title, 3 section, 4 value, 5 subtitle,
+  // 6 status-done, 7 status-pending, 8 kpi-label, 9 kpi-blue,
+  // 10 kpi-green, 11 kpi-orange, 12 note, 13 footer, 14 photo-note.
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="8">
+    <font><sz val="11"/><name val="Arial"/><color rgb="FF173F3D"/></font>
+    <font><b/><sz val="11"/><name val="Arial"/><color rgb="FF0B5D58"/></font>
+    <font><b/><sz val="18"/><name val="Arial"/><color rgb="FFFFFFFF"/></font>
+    <font><b/><sz val="12"/><name val="Arial"/><color rgb="FFFFFFFF"/></font>
+    <font><b/><sz val="12"/><name val="Arial"/><color rgb="FF0B5D58"/></font>
+    <font><b/><sz val="16"/><name val="Arial"/><color rgb="FF0B5D58"/></font>
+    <font><b/><sz val="11"/><name val="Arial"/><color rgb="FFFFFFFF"/></font>
+    <font><i/><sz val="10"/><name val="Arial"/><color rgb="FF6D7F7D"/></font>
+  </fonts>
+  <fills count="10">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF087F79"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF0F9B93"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFEAF7F5"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF7FBFA"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF198754"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFC98A00"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFEAF2FC"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFF4E5"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFD4E4E1"/></left>
+      <right style="thin"><color rgb="FFD4E4E1"/></right>
+      <top style="thin"><color rgb="FFD4E4E1"/></top>
+      <bottom style="thin"><color rgb="FFD4E4E1"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="15">
+    <xf numFmtId="0" fontId="0" fillId="5" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="top" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="4" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="5" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="4" fillId="4" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="6" fillId="6" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="6" fillId="7" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="4" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="9" fontId="5" fillId="8" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="center" vertical="center" readingOrder="2"/></xf>
+    <xf numFmtId="9" fontId="5" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="center" vertical="center" readingOrder="2"/></xf>
+    <xf numFmtId="9" fontId="5" fillId="9" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="center" vertical="center" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="4" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="top" wrapText="1" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="4" fillId="5" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" readingOrder="2"/></xf>
+    <xf numFmtId="0" fontId="7" fillId="5" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1" readingOrder="2"/></xf>
+  </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
 
   const workbookSheets = [];
   const workbookRels = [];
   const entries = [];
   const contentOverrides = [];
+  const definedNames = [];
   const mediaMap = new Map();
   let globalMediaCounter = 1;
 
@@ -2319,35 +2394,127 @@ async function exportExcel(selection = null) {
     logoMediaName = `image${globalMediaCounter++}.jpeg`;
     mediaMap.set(logoMediaName, logoData.bytes);
     const dims = await imageSizeFromDataUrl(logoDataUrl);
-    logoFit = fitImageEmu(dims.width, dims.height, 1.15, 1.15);
+    logoFit = fitImageEmu(dims.width, dims.height, 1.2, 1.2);
   }
 
   for (let sheetIndex = 0; sheetIndex < selectedWeeks.length; sheetIndex += 1) {
     const week = selectedWeeks[sheetIndex];
     const sheetNumber = sheetIndex + 1;
+    const indicator = getIndicator(week.id);
+    const record = getNoorRecord(week.id);
+    const status = state.completed[completionKey(week.id)] ? "تم التنفيذ" : "قيد التنفيذ";
+    const program = record.program || week.programs.join("، ");
+    const procedure = record.procedure || selectedProgramIdeasForWeek(week).join(" • ") || "—";
+    const ideas = selectedIdeasForWeek(week).join(" • ") || "لم يتم تحديد أفكار بعد.";
+    const photos = evidenceCache[week.id] || [];
+
     const rows = [];
-    let r = 1;
-    rows.push(`<row r="${r}" ht="26" customHeight="1">${xlsxCell(`${week.title} — ${week.theme}`, r, 0, 2)}</row>`);
-    r += 2;
-    const meta = [
-      ["اسم مُعدّ التقرير", state.report?.userName || "—"],
-      ["إدارة التعليم", state.admin || "—"],
-      ["اسم المدرسة", state.school || "—"],
-      ["مدير المدرسة", state.report?.principalName || "—"],
-      ["العام الدراسي", state.report?.academicYear || "—"]
+    const merges = [];
+    const addRow = (rowNum, height, cells = "") => {
+      rows.push(`<row r="${rowNum}" ht="${height}" customHeight="1">${cells}</row>`);
+    };
+    const merge = (ref) => merges.push(ref);
+
+    // رأس التقرير
+    addRow(1, 28, xlsxMergedCell(`${week.title} — ${week.theme}`, 1, 0, 2));
+    addRow(2, 28);
+    merge("A1:F2");
+    merge("G1:H3");
+    addRow(3, 21, xlsxMergedCell("الخطة التفاعلية لبرامج التوجيه الطلابي والقيم", 3, 0, 5));
+    merge("A3:F3");
+    addRow(4, 6);
+
+    // بيانات التقرير الرئيسية
+    const metaRows = [
+      [5, "اسم مُعدّ التقرير", state.report?.userName || "—", "إدارة التعليم", state.admin || "—"],
+      [6, "اسم المدرسة", state.school || "—", "مدير المدرسة", state.report?.principalName || "—"],
+      [7, "العام الدراسي", state.report?.academicYear || "—", "الفترة", `${week.dates[0]} – ${week.dates[1]}`],
+      [8, "حالة التنفيذ", status, "عنوان الأسبوع", week.theme]
     ];
-    for (const [label, value] of meta) {
-      rows.push(`<row r="${r}">${xlsxCell(label, r, 0, 1)}${xlsxCell(value, r, 1, 0)}</row>`);
-      r += 1;
+    for (const [rowNum, label1, value1, label2, value2] of metaRows) {
+      const statusStyle = rowNum === 8 ? (status === "تم التنفيذ" ? 6 : 7) : 4;
+      addRow(rowNum, 23,
+        xlsxCell(label1, rowNum, 0, 1) +
+        xlsxMergedCell(value1, rowNum, 2, statusStyle) +
+        xlsxCell(label2, rowNum, 4, 1) +
+        xlsxMergedCell(value2, rowNum, 6, 4)
+      );
+      merge(`A${rowNum}:B${rowNum}`);
+      merge(`C${rowNum}:D${rowNum}`);
+      merge(`E${rowNum}:F${rowNum}`);
+      merge(`G${rowNum}:H${rowNum}`);
     }
-    r += 1;
-    for (const [label, value] of weekInfoRows(week)) {
-      rows.push(`<row r="${r}" ht="32" customHeight="1">${xlsxCell(label, r, 0, 1)}${xlsxCell(value || "—", r, 1, 0)}</row>`);
-      r += 1;
-    }
-    r += 1;
-    rows.push(`<row r="${r}">${xlsxCell("صور الشواهد والتوثيق", r, 0, 2)}${xlsxCell((evidenceCache[week.id] || []).length ? "مدرجة أدناه" : "لا توجد صور في الجلسة الحالية", r, 1, 0)}</row>`);
-    const imageStartRow = r + 2;
+    addRow(9, 7);
+
+    // بيانات البرنامج والتفعيل
+    addRow(10, 24, xlsxMergedCell("بيانات البرنامج والتفعيل", 10, 0, 3));
+    merge("A10:H10");
+    addRow(11, 42, xlsxCell("البرنامج", 11, 0, 1) + xlsxMergedCell(program, 11, 2, 0));
+    merge("A11:B11"); merge("C11:H11");
+    addRow(12, 25,
+      xlsxCell("القيمة المستهدفة", 12, 0, 1) + xlsxMergedCell(week.value, 12, 2, 4) +
+      xlsxCell("الفئة المستهدفة", 12, 4, 1) + xlsxMergedCell(record.targetGroup || "—", 12, 6, 4)
+    );
+    merge("A12:B12"); merge("C12:D12"); merge("E12:F12"); merge("G12:H12");
+    addRow(13, 25,
+      xlsxCell("عدد المستفيدين", 13, 0, 1) + xlsxMergedCell(record.beneficiaries || "—", 13, 2, 4) +
+      xlsxCell("المشاركون في التنفيذ", 13, 4, 1) + xlsxMergedCell(record.participants || "—", 13, 6, 4)
+    );
+    merge("A13:B13"); merge("C13:D13"); merge("E13:F13"); merge("G13:H13");
+    addRow(14, 48, xlsxCell("إجراء التنفيذ", 14, 0, 1) + xlsxMergedCell(procedure, 14, 2, 0));
+    merge("A14:B14"); merge("C14:H14");
+    addRow(15, 23, xlsxMergedCell("الأفكار المختارة", 15, 0, 3));
+    merge("A15:H15");
+    addRow(16, 42, xlsxMergedCell(ideas, 16, 0, 12));
+    merge("A16:H16");
+    addRow(17, 7);
+
+    // مؤشرات الأثر
+    addRow(18, 24, xlsxMergedCell("مؤشرات تحقيق الأهداف والأثر", 18, 0, 3));
+    merge("A18:H18");
+    addRow(19, 22,
+      xlsxMergedCell("المشاركة", 19, 0, 8) +
+      xlsxMergedCell("تحقق الهدف", 19, 3, 8) +
+      xlsxMergedCell("رضا المستفيدين", 19, 6, 8)
+    );
+    merge("A19:C19"); merge("D19:F19"); merge("G19:H19");
+    const p1 = excelPercentValue(indicator.participation);
+    const p2 = excelPercentValue(indicator.achievement);
+    const p3 = excelPercentValue(indicator.satisfaction);
+    addRow(20, 30,
+      (p1 == null ? xlsxMergedCell("—", 20, 0, 9) : xlsxNumberCell(p1, 20, 0, 9)) +
+      (p2 == null ? xlsxMergedCell("—", 20, 3, 10) : xlsxNumberCell(p2, 20, 3, 10)) +
+      (p3 == null ? xlsxMergedCell("—", 20, 6, 11) : xlsxNumberCell(p3, 20, 6, 11))
+    );
+    merge("A20:C20"); merge("D20:F20"); merge("G20:H20");
+    addRow(21, 36, xlsxCell("الأثر الملحوظ", 21, 0, 1) + xlsxMergedCell(indicator.impactNote || "—", 21, 2, 12));
+    merge("A21:B21"); merge("C21:H21");
+    addRow(22, 7);
+
+    // الشواهد والعوائق والملاحظات
+    addRow(23, 24, xlsxMergedCell("الشواهد والعوائق والملاحظات", 23, 0, 3));
+    merge("A23:H23");
+    addRow(24, 42, xlsxCell("شواهد التنفيذ", 24, 0, 1) + xlsxMergedCell(record.evidenceText || "—", 24, 2, 12));
+    merge("A24:B24"); merge("C24:H24");
+    addRow(25, 34, xlsxCell("العوائق", 25, 0, 1) + xlsxMergedCell(record.obstacles || "—", 25, 2, 12));
+    merge("A25:B25"); merge("C25:H25");
+    addRow(26, 36, xlsxCell("ملاحظات عامة", 26, 0, 1) + xlsxMergedCell(record.notes || "—", 26, 2, 12));
+    merge("A26:B26"); merge("C26:H26");
+    addRow(27, 7);
+
+    // الصور: شبكية 2 أعمدة، وآخر صورة مفردة تتوسط العرض.
+    addRow(28, 24, xlsxMergedCell("صور الشواهد والتوثيق", 28, 0, 3));
+    merge("A28:H28");
+    addRow(29, 20, xlsxMergedCell(photos.length ? `عدد الصور المرفقة: ${arNum(photos.length)}` : "لا توجد صور توثيق مضافة في الجلسة الحالية.", 29, 0, 14));
+    merge("A29:H29");
+
+    const photoStartRow = 30;
+    const photoBlocks = Math.max(1, Math.ceil(photos.length / 2));
+    const photoRows = photoBlocks * 8;
+    for (let rr = photoStartRow; rr < photoStartRow + photoRows; rr += 1) addRow(rr, 15);
+    const footerRow = photoStartRow + photoRows;
+    addRow(footerRow, 22, xlsxMergedCell("أ/ فاطمة هزازي", footerRow, 0, 13));
+    merge(`A${footerRow}:H${footerRow}`);
 
     const drawingPictures = [];
     const drawingRels = [];
@@ -2356,11 +2523,9 @@ async function exportExcel(selection = null) {
     if (logoData && logoMediaName && logoFit) {
       const relId = `rId${relIdCounter++}`;
       drawingRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/xl/media/${logoMediaName}" Id="${relId}"/>`);
-      drawingPictures.push(xlsxDrawingPicture({ relId, id: picId++, name: "شعار التقرير", col: 2, row: 0, cx: logoFit.cx, cy: logoFit.cy }));
+      drawingPictures.push(xlsxDrawingPicture({ relId, id: picId++, name: "شعار التقرير", col: 6, row: 0, cx: logoFit.cx, cy: logoFit.cy, colOff: 90000, rowOff: 40000 }));
     }
 
-    let currentRow = imageStartRow - 1;
-    const photos = evidenceCache[week.id] || [];
     for (let index = 0; index < photos.length; index += 1) {
       const photo = photos[index];
       const data = dataUrlToBytes(photo.dataUrl);
@@ -2368,15 +2533,40 @@ async function exportExcel(selection = null) {
       const mediaName = `image${globalMediaCounter++}.jpeg`;
       mediaMap.set(mediaName, data.bytes);
       const dims = await imageSizeFromDataUrl(photo.dataUrl);
-      const fit = fitImageEmu(dims.width, dims.height, 5.7, 3.6);
+      const isOddLast = photos.length % 2 === 1 && index === photos.length - 1;
+      const block = Math.floor(index / 2);
+      const anchorRow = photoStartRow - 1 + block * 8;
+      const maxW = isOddLast ? 5.4 : 3.0;
+      const maxH = 1.55;
+      const fit = fitImageEmu(dims.width, dims.height, maxW, maxH);
       const relId = `rId${relIdCounter++}`;
       drawingRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/xl/media/${mediaName}" Id="${relId}"/>`);
-      drawingPictures.push(xlsxDrawingPicture({ relId, id: picId++, name: photo.name || `شاهد ${index + 1}`, col: 0, row: currentRow, cx: fit.cx, cy: fit.cy }));
-      currentRow += Math.max(12, Math.ceil((fit.cy / 914400) * 7));
+      const col = isOddLast ? 1 : (index % 2 === 0 ? 0 : 4);
+      const colOff = isOddLast ? 180000 : 100000;
+      drawingPictures.push(xlsxDrawingPicture({ relId, id: picId++, name: photo.name || `شاهد ${index + 1}`, col, row: anchorRow, cx: fit.cx, cy: fit.cy, colOff, rowOff: 70000 }));
     }
 
     const hasDrawing = drawingPictures.length > 0;
-    const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews><cols><col min="1" max="1" width="26" customWidth="1"/><col min="2" max="2" width="78" customWidth="1"/><col min="3" max="3" width="16" customWidth="1"/></cols><sheetData>${rows.join("")}</sheetData>${hasDrawing ? '<drawing r:id="rId1"/>' : ""}</worksheet>`;
+    const mergeXml = merges.length ? `<mergeCells count="${merges.length}">${merges.map((ref) => `<mergeCell ref="${ref}"/>`).join("")}</mergeCells>` : "";
+    const columns = Array.from({ length: 8 }, (_, i) => `<col min="${i + 1}" max="${i + 1}" width="${i === 0 || i === 1 ? 12 : 13.2}" customWidth="1"/>`).join("");
+    const printEndRow = footerRow;
+
+    const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheetPr><pageSetUpPr fitToPage="1" autoPageBreaks="0"/></sheetPr>
+  <dimension ref="A1:H${printEndRow}"/>
+  <sheetViews><sheetView workbookViewId="0" rightToLeft="1" zoomScale="90" zoomScaleNormal="90"/></sheetViews>
+  <sheetFormatPr defaultRowHeight="18"/>
+  <cols>${columns}</cols>
+  <sheetData>${rows.join("")}</sheetData>
+  ${mergeXml}
+  <printOptions horizontalCentered="1" verticalCentered="0"/>
+  <pageMargins left="0.25" right="0.25" top="0.35" bottom="0.35" header="0.15" footer="0.15"/>
+  <pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="1" horizontalDpi="300" verticalDpi="300"/>
+  <headerFooter differentFirst="0" differentOddEven="0"><oddFooter>&amp;Cأ/ فاطمة هزازي</oddFooter></headerFooter>
+  ${hasDrawing ? '<drawing r:id="rId1"/>' : ""}
+</worksheet>`;
+
     entries.push({ name: `xl/worksheets/sheet${sheetNumber}.xml`, data: sheetXml });
     contentOverrides.push(`<Override PartName="/xl/worksheets/sheet${sheetNumber}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`);
 
@@ -2392,11 +2582,19 @@ async function exportExcel(selection = null) {
     const sheetName = xlsxSafeSheetName(week.title, `الأسبوع ${sheetNumber}`);
     workbookSheets.push(`<sheet name="${xmlEscape(sheetName)}" sheetId="${sheetNumber}" r:id="rId${sheetNumber}"/>`);
     workbookRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${sheetNumber}.xml" Id="rId${sheetNumber}"/>`);
+    const formulaSheetName = String(sheetName).replace(/'/g, "''");
+    definedNames.push(`<definedName name="_xlnm.Print_Area" localSheetId="${sheetIndex}">'${xmlEscape(formulaSheetName)}'!$A$1:$H$${printEndRow}</definedName>`);
   }
 
   const stylesRelId = selectedWeeks.length + 1;
   workbookRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml" Id="rId${stylesRelId}"/>`);
-  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>${workbookSheets.join("")}</sheets></workbook>`;
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <bookViews><workbookView activeTab="0"/></bookViews>
+  <sheets>${workbookSheets.join("")}</sheets>
+  ${definedNames.length ? `<definedNames>${definedNames.join("")}</definedNames>` : ""}
+  <calcPr calcId="191029" fullCalcOnLoad="1" forceFullCalc="1"/>
+</workbook>`;
 
   entries.unshift(
     { name: "xl/styles.xml", data: stylesXml },
@@ -2409,6 +2607,8 @@ async function exportExcel(selection = null) {
   entries.unshift({ name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${mediaMap.size ? '<Default Extension="jpeg" ContentType="image/jpeg"/>' : ""}<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${contentOverrides.join("")}</Types>` });
 
   const blob = makeZip(entries, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  downloadBlob(blob, blob.type, `${exportFileStem(selectedWeeks)}.xlsx`);
-  toast(selectedWeeks.length === 1 ? "تم تصدير Excel للأسبوع المحدد مع الشواهد والصور" : "تم تصدير Excel للأسابيع المعبأة فقط مع الشواهد والصور");
+  downloadBlob(blob, blob.type, `${exportFileStem(selectedWeeks)}-Excel-احترافي.xlsx`);
+  toast(selectedWeeks.length === 1
+    ? "تم تصدير تقرير Excel احترافي للأسبوع المحدد — RTL + A4 + الشواهد والصور"
+    : "تم تصدير Excel احترافي؛ كل أسبوع مُعبّأ في ورقة مستقلة ومهيأة للطباعة A4");
 }
