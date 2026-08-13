@@ -841,3 +841,7 @@ main { margin-top: 20px; }
   .hero-logo { box-shadow: none; }
   dialog { display: none !important; }
 }
+
+
+/* v6 weekly export actions */
+.report-export-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.report-export-actions .btn{flex:1 1 180px;justify-content:center}

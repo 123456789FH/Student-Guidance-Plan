@@ -780,12 +780,29 @@ function renderFollowupPanel(week) {
   evidenceDetails.appendChild(evidenceContent);
   panel.appendChild(evidenceDetails);
 
+  const reportActions = document.createElement("div");
+  reportActions.className = "report-export-actions";
+
   const reportBtn = document.createElement("button");
   reportBtn.type = "button";
   reportBtn.className = "btn btn--soft report-btn";
-  reportBtn.textContent = "🧾 تقرير الأسبوع المنظم";
+  reportBtn.textContent = "🧾 PDF / طباعة الأسبوع";
   reportBtn.addEventListener("click", () => printWeekReport(week));
-  panel.appendChild(reportBtn);
+
+  const wordBtn = document.createElement("button");
+  wordBtn.type = "button";
+  wordBtn.className = "btn btn--soft";
+  wordBtn.textContent = "📝 Word للأسبوع";
+  wordBtn.addEventListener("click", () => exportWord([week]));
+
+  const excelBtn = document.createElement("button");
+  excelBtn.type = "button";
+  excelBtn.className = "btn btn--soft";
+  excelBtn.textContent = "📊 Excel للأسبوع";
+  excelBtn.addEventListener("click", () => exportExcel([week]));
+
+  reportActions.append(reportBtn, wordBtn, excelBtn);
+  panel.appendChild(reportActions);
 
   updateCompleteButton(toggle, week.id);
   queueMicrotask(() => renderEvidenceGrids(week.id));
@@ -1827,3 +1844,313 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+
+/* ============================================================
+   v6 — تصدير أسبوعي ذكي + تضمين صور الشواهد في Word وExcel
+   ============================================================ */
+
+function weekHasReportData(week) {
+  const indicator = getIndicator(week.id);
+  const record = getNoorRecord(week.id);
+  const hasIndicators = [indicator.participation, indicator.achievement, indicator.satisfaction]
+    .some((value) => value !== "" && value != null) || Boolean(String(indicator.impactNote || "").trim());
+  const hasRecord = [record.program, record.targetGroup, record.beneficiaries, record.participants, record.procedure, record.evidenceText, record.obstacles, record.notes]
+    .some((value) => Boolean(String(value || "").trim()));
+  const hasNotes = [state.notes[noteKey(week.id, "program")], state.notes[noteKey(week.id, "value")]]
+    .some((value) => Boolean(String(value || "").trim()));
+  return Boolean(
+    state.completed[completionKey(week.id)] ||
+    hasIndicators ||
+    hasRecord ||
+    hasNotes ||
+    selectedIdeasForWeek(week).length ||
+    (evidenceCache[week.id] || []).length
+  );
+}
+
+function exportableWeeks(selection) {
+  if (Array.isArray(selection) && selection.length) return selection;
+  const prepared = weeks.filter(weekHasReportData);
+  if (prepared.length) return prepared;
+  toast("لم يتم تعبئة أي تقرير أسبوعي بعد");
+  return [];
+}
+
+function exportFileStem(selectedWeeks) {
+  const school = safeFileBase(state.school || "تقرير-التوجيه");
+  if (selectedWeeks.length === 1) return `${school}-${safeFileBase(selectedWeeks[0].title)}`;
+  return `${school}-الأسابيع-المعبأة`;
+}
+
+function weekExportTitle(selectedWeeks) {
+  if (selectedWeeks.length === 1) return `تقرير ${selectedWeeks[0].title} — ${selectedWeeks[0].theme}`;
+  return "تقرير التوثيق — الأسابيع المعبأة";
+}
+
+function weekInfoRows(week) {
+  const indicator = getIndicator(week.id);
+  const record = getNoorRecord(week.id);
+  const status = state.completed[completionKey(week.id)] ? "تم التنفيذ" : "قيد التنفيذ";
+  const program = record.program || week.programs.join("، ");
+  const procedure = record.procedure || selectedProgramIdeasForWeek(week).join(" • ");
+  return [
+    ["الفترة", `${week.dates[0]} - ${week.dates[1]}`],
+    ["البرنامج", program],
+    ["القيمة", week.value],
+    ["الفئة المستهدفة", record.targetGroup],
+    ["عدد المستفيدين", record.beneficiaries],
+    ["المشاركون", record.participants],
+    ["حالة التنفيذ", status],
+    ["إجراء التنفيذ", procedure],
+    ["شواهد التنفيذ", record.evidenceText],
+    ["العوائق", record.obstacles],
+    ["ملاحظات عامة", record.notes],
+    ["المشاركة", indicator.participation === "" ? "—" : `${indicator.participation}%`],
+    ["تحقق الهدف", indicator.achievement === "" ? "—" : `${indicator.achievement}%`],
+    ["الرضا", indicator.satisfaction === "" ? "—" : `${indicator.satisfaction}%`],
+    ["الأثر الملحوظ", indicator.impactNote],
+    ["الأفكار المحددة", selectedIdeasForWeek(week).join(" • ")],
+    ["عدد صور الشواهد والتوثيق", String((evidenceCache[week.id] || []).length)]
+  ];
+}
+
+function imageSizeFromDataUrl(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth || img.width || 1200, height: img.naturalHeight || img.height || 800 });
+    img.onerror = () => resolve({ width: 1200, height: 800 });
+    img.src = dataUrl;
+  });
+}
+
+function fitImageEmu(width, height, maxWidthIn = 5.8, maxHeightIn = 3.8) {
+  const safeW = Math.max(1, Number(width) || 1);
+  const safeH = Math.max(1, Number(height) || 1);
+  const scale = Math.min((maxWidthIn * 914400) / safeW, (maxHeightIn * 914400) / safeH);
+  return {
+    cx: Math.max(914400, Math.round(safeW * scale)),
+    cy: Math.max(685800, Math.round(safeH * scale))
+  };
+}
+
+function docxImageParagraphV6(relId, docPrId, name, cx, cy) {
+  const safeName = xmlEscape(name || `صورة ${docPrId}`);
+  return `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="120"/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${docPrId}" name="${safeName}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${docPrId}" name="${safeName}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+}
+
+async function exportWord(selection = null) {
+  captureIdentity();
+  persistState();
+  const selectedWeeks = exportableWeeks(selection);
+  if (!selectedWeeks.length) return;
+
+  setStatus("جارٍ تجهيز ملف Word مع صور الشواهد…");
+  const metaRows = [
+    ["اسم مُعدّ التقرير", state.report?.userName || "—"],
+    ["إدارة التعليم", state.admin || "—"],
+    ["اسم المدرسة", state.school || "—"],
+    ["مدير المدرسة", state.report?.principalName || "—"],
+    ["العام الدراسي", state.report?.academicYear || "—"]
+  ];
+
+  const relationships = [
+    `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`
+  ];
+  const mediaEntries = [];
+  let relCounter = 2;
+  let docPrCounter = 1;
+
+  let logoParagraph = "";
+  const logoDataUrl = state.report?.logoDataUrl || defaultLogoJpegDataUrl();
+  const logoData = dataUrlToBytes(logoDataUrl);
+  if (logoData) {
+    const relId = `rId${relCounter++}`;
+    relationships.push(`<Relationship Id="${relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/report-logo.jpeg"/>`);
+    mediaEntries.push({ name: "word/media/report-logo.jpeg", data: logoData.bytes });
+    const dims = await imageSizeFromDataUrl(logoDataUrl);
+    const fit = fitImageEmu(dims.width, dims.height, 1.1, 1.1);
+    logoParagraph = docxImageParagraphV6(relId, docPrCounter++, "شعار التقرير", fit.cx, fit.cy);
+  }
+
+  const weekSections = [];
+  for (const week of selectedWeeks) {
+    let section = `${docxParagraph(`${week.title} — ${week.theme}`, { bold: true, size: 30, spacingAfter: 120 })}${docxInfoTable(weekInfoRows(week))}`;
+    const photos = evidenceCache[week.id] || [];
+    section += docxParagraph("صور الشواهد والتوثيق", { bold: true, size: 26, spacingAfter: 100 });
+    if (!photos.length) {
+      section += docxParagraph("لا توجد صور توثيق مضافة في الجلسة الحالية.", { size: 22, spacingAfter: 160 });
+    } else {
+      for (let index = 0; index < photos.length; index += 1) {
+        const photo = photos[index];
+        const imageData = dataUrlToBytes(photo.dataUrl);
+        if (!imageData) continue;
+        const relId = `rId${relCounter++}`;
+        const fileName = `evidence-w${week.id}-${index + 1}.jpeg`;
+        relationships.push(`<Relationship Id="${relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${fileName}"/>`);
+        mediaEntries.push({ name: `word/media/${fileName}`, data: imageData.bytes });
+        const dims = await imageSizeFromDataUrl(photo.dataUrl);
+        const fit = fitImageEmu(dims.width, dims.height, 5.7, 3.8);
+        section += docxImageParagraphV6(relId, docPrCounter++, photo.name || `شاهد ${index + 1}`, fit.cx, fit.cy);
+      }
+    }
+    section += docxParagraph("", { spacingAfter: 180 });
+    weekSections.push(section);
+  }
+
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>
+${logoParagraph}
+${docxParagraph(weekExportTitle(selectedWeeks), { bold: true, size: 34, center: true, spacingAfter: 80 })}
+${docxParagraph("الخطة التفاعلية لبرامج التوجيه الطلابي والقيم", { size: 24, center: true, spacingAfter: 180 })}
+${docxInfoTable(metaRows)}
+${docxParagraph("", { spacingAfter: 180 })}
+${weekSections.join("")}
+${docxParagraph("أ/ فاطمة هزازي", { bold: true, size: 24, center: true, spacingAfter: 0 })}
+<w:sectPr><w:bidi/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:right="900" w:bottom="900" w:left="900" w:header="500" w:footer="500" w:gutter="0"/></w:sectPr>
+</w:body></w:document>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${mediaEntries.length ? '<Default Extension="jpeg" ContentType="image/jpeg"/>' : ""}<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:rtl/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:bidi/><w:jc w:val="right"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+
+  const entries = [
+    { name: "[Content_Types].xml", data: contentTypes },
+    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>` },
+    { name: "word/document.xml", data: documentXml },
+    { name: "word/styles.xml", data: stylesXml },
+    { name: "word/_rels/document.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${relationships.join("")}</Relationships>` },
+    ...mediaEntries
+  ];
+
+  const blob = makeZip(entries, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  downloadBlob(blob, blob.type, `${exportFileStem(selectedWeeks)}.docx`);
+  toast(selectedWeeks.length === 1 ? "تم تصدير Word للأسبوع المحدد مع الشواهد والصور" : "تم تصدير Word للأسابيع المعبأة فقط مع الشواهد والصور");
+}
+
+function xlsxSafeSheetName(value, fallback) {
+  const name = String(value || fallback || "تقرير").replace(/[\\\/?*\[\]:]/g, " ").trim().slice(0, 31);
+  return name || fallback || "تقرير";
+}
+
+function xlsxDrawingPicture({ relId, id, name, col = 0, row = 0, cx, cy }) {
+  return `<oneCellAnchor><from><col>${col}</col><colOff>0</colOff><row>${row}</row><rowOff>0</rowOff></from><ext cx="${cx}" cy="${cy}"/><pic><nvPicPr><cNvPr id="${id}" name="${xmlEscape(name)}" descr="${xmlEscape(name)}"/><cNvPicPr/></nvPicPr><blipFill><a:blip xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" cstate="print" r:embed="${relId}"/><a:stretch xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:fillRect/></a:stretch></blipFill><spPr><a:prstGeom xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" prst="rect"/></spPr></pic><clientData/></oneCellAnchor>`;
+}
+
+async function exportExcel(selection = null) {
+  captureIdentity();
+  persistState();
+  const selectedWeeks = exportableWeeks(selection);
+  if (!selectedWeeks.length) return;
+  setStatus("جارٍ تجهيز ملف Excel مع صور الشواهد…");
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Arial"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Arial"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="16"/><name val="Arial"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF087F79"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0F9B93"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD6E5E2"/></left><right style="thin"><color rgb="FFD6E5E2"/></right><top style="thin"><color rgb="FFD6E5E2"/></top><bottom style="thin"><color rgb="FFD6E5E2"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyAlignment="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+
+  const workbookSheets = [];
+  const workbookRels = [];
+  const entries = [];
+  const contentOverrides = [];
+  const mediaMap = new Map();
+  let globalMediaCounter = 1;
+
+  const logoDataUrl = state.report?.logoDataUrl || defaultLogoJpegDataUrl();
+  const logoData = dataUrlToBytes(logoDataUrl);
+  let logoMediaName = "";
+  let logoFit = null;
+  if (logoData) {
+    logoMediaName = `image${globalMediaCounter++}.jpeg`;
+    mediaMap.set(logoMediaName, logoData.bytes);
+    const dims = await imageSizeFromDataUrl(logoDataUrl);
+    logoFit = fitImageEmu(dims.width, dims.height, 1.15, 1.15);
+  }
+
+  for (let sheetIndex = 0; sheetIndex < selectedWeeks.length; sheetIndex += 1) {
+    const week = selectedWeeks[sheetIndex];
+    const sheetNumber = sheetIndex + 1;
+    const rows = [];
+    let r = 1;
+    rows.push(`<row r="${r}" ht="26" customHeight="1">${xlsxCell(`${week.title} — ${week.theme}`, r, 0, 2)}</row>`);
+    r += 2;
+    const meta = [
+      ["اسم مُعدّ التقرير", state.report?.userName || "—"],
+      ["إدارة التعليم", state.admin || "—"],
+      ["اسم المدرسة", state.school || "—"],
+      ["مدير المدرسة", state.report?.principalName || "—"],
+      ["العام الدراسي", state.report?.academicYear || "—"]
+    ];
+    for (const [label, value] of meta) {
+      rows.push(`<row r="${r}">${xlsxCell(label, r, 0, 1)}${xlsxCell(value, r, 1, 0)}</row>`);
+      r += 1;
+    }
+    r += 1;
+    for (const [label, value] of weekInfoRows(week)) {
+      rows.push(`<row r="${r}" ht="32" customHeight="1">${xlsxCell(label, r, 0, 1)}${xlsxCell(value || "—", r, 1, 0)}</row>`);
+      r += 1;
+    }
+    r += 1;
+    rows.push(`<row r="${r}">${xlsxCell("صور الشواهد والتوثيق", r, 0, 2)}${xlsxCell((evidenceCache[week.id] || []).length ? "مدرجة أدناه" : "لا توجد صور في الجلسة الحالية", r, 1, 0)}</row>`);
+    const imageStartRow = r + 2;
+
+    const drawingPictures = [];
+    const drawingRels = [];
+    let picId = 1;
+    let relIdCounter = 1;
+    if (logoData && logoMediaName && logoFit) {
+      const relId = `rId${relIdCounter++}`;
+      drawingRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/xl/media/${logoMediaName}" Id="${relId}"/>`);
+      drawingPictures.push(xlsxDrawingPicture({ relId, id: picId++, name: "شعار التقرير", col: 2, row: 0, cx: logoFit.cx, cy: logoFit.cy }));
+    }
+
+    let currentRow = imageStartRow - 1;
+    const photos = evidenceCache[week.id] || [];
+    for (let index = 0; index < photos.length; index += 1) {
+      const photo = photos[index];
+      const data = dataUrlToBytes(photo.dataUrl);
+      if (!data) continue;
+      const mediaName = `image${globalMediaCounter++}.jpeg`;
+      mediaMap.set(mediaName, data.bytes);
+      const dims = await imageSizeFromDataUrl(photo.dataUrl);
+      const fit = fitImageEmu(dims.width, dims.height, 5.7, 3.6);
+      const relId = `rId${relIdCounter++}`;
+      drawingRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/xl/media/${mediaName}" Id="${relId}"/>`);
+      drawingPictures.push(xlsxDrawingPicture({ relId, id: picId++, name: photo.name || `شاهد ${index + 1}`, col: 0, row: currentRow, cx: fit.cx, cy: fit.cy }));
+      currentRow += Math.max(12, Math.ceil((fit.cy / 914400) * 7));
+    }
+
+    const hasDrawing = drawingPictures.length > 0;
+    const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView workbookViewId="0" rightToLeft="1"/></sheetViews><cols><col min="1" max="1" width="26" customWidth="1"/><col min="2" max="2" width="78" customWidth="1"/><col min="3" max="3" width="16" customWidth="1"/></cols><sheetData>${rows.join("")}</sheetData>${hasDrawing ? '<drawing r:id="rId1"/>' : ""}</worksheet>`;
+    entries.push({ name: `xl/worksheets/sheet${sheetNumber}.xml`, data: sheetXml });
+    contentOverrides.push(`<Override PartName="/xl/worksheets/sheet${sheetNumber}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`);
+
+    if (hasDrawing) {
+      const drawingXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><wsDr xmlns="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">${drawingPictures.join("")}</wsDr>`;
+      const drawingRelXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${drawingRels.join("")}</Relationships>`;
+      entries.push({ name: `xl/drawings/drawing${sheetNumber}.xml`, data: drawingXml });
+      entries.push({ name: `xl/drawings/_rels/drawing${sheetNumber}.xml.rels`, data: drawingRelXml });
+      entries.push({ name: `xl/worksheets/_rels/sheet${sheetNumber}.xml.rels`, data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="/xl/drawings/drawing${sheetNumber}.xml" Id="rId1"/></Relationships>` });
+      contentOverrides.push(`<Override PartName="/xl/drawings/drawing${sheetNumber}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`);
+    }
+
+    const sheetName = xlsxSafeSheetName(week.title, `الأسبوع ${sheetNumber}`);
+    workbookSheets.push(`<sheet name="${xmlEscape(sheetName)}" sheetId="${sheetNumber}" r:id="rId${sheetNumber}"/>`);
+    workbookRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${sheetNumber}.xml" Id="rId${sheetNumber}"/>`);
+  }
+
+  const stylesRelId = selectedWeeks.length + 1;
+  workbookRels.push(`<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml" Id="rId${stylesRelId}"/>`);
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>${workbookSheets.join("")}</sheets></workbook>`;
+
+  entries.unshift(
+    { name: "xl/styles.xml", data: stylesXml },
+    { name: "xl/_rels/workbook.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${workbookRels.join("")}</Relationships>` },
+    { name: "xl/workbook.xml", data: workbookXml },
+    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` }
+  );
+
+  for (const [name, bytes] of mediaMap.entries()) entries.push({ name: `xl/media/${name}`, data: bytes });
+  entries.unshift({ name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${mediaMap.size ? '<Default Extension="jpeg" ContentType="image/jpeg"/>' : ""}<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${contentOverrides.join("")}</Types>` });
+
+  const blob = makeZip(entries, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  downloadBlob(blob, blob.type, `${exportFileStem(selectedWeeks)}.xlsx`);
+  toast(selectedWeeks.length === 1 ? "تم تصدير Excel للأسبوع المحدد مع الشواهد والصور" : "تم تصدير Excel للأسابيع المعبأة فقط مع الشواهد والصور");
+}

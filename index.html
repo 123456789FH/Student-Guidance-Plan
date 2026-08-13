@@ -43,9 +43,9 @@
           <div class="export-menu__panel">
             <button type="button" id="exportJsonBtn">JSON ⬇️</button>
             <button type="button" id="importJsonBtn">JSON ⬆️ استيراد</button>
-            <button type="button" id="exportExcelBtn">Excel (.xlsx)</button>
-            <button type="button" id="exportWordBtn">Word (.docx)</button>
-            <small>ملف JSON لا يتضمن صور التوثيق المؤقتة.</small>
+            <button type="button" id="exportExcelBtn">Excel (.xlsx) — المعبأة فقط</button>
+            <button type="button" id="exportWordBtn">Word (.docx) — المعبأة فقط</button>
+            <small>Word وExcel يصدّران الأسابيع المعبأة فقط ويضمّنان صور الشواهد الموجودة في الجلسة الحالية. JSON لا يتضمن الصور.</small>
           </div>
         </details>
 
@@ -82,7 +82,7 @@
         <div class="privacy-card__body">
           <p><strong>هذا التطبيق مساعد للتخطيط والتوثيق، وليس مرتبطًا تقنيًا بنظام نور ولا يرسل إليه أي بيانات.</strong></p>
           <p>استخدم معلومات عامة وإحصائية فقط. لا تدخل أسماء الطلاب، أرقام الهوية، بيانات التواصل، بيانات الدخول لنور، أو تفاصيل الحالات الصحية أو السلوكية أو الأسرية الفردية.</p>
-          <p><strong>صور التوثيق مؤقتة في الذاكرة ولا تُحفظ بعد تحديث الصفحة أو إغلاقها.</strong> لا ترفع صورًا يظهر فيها أشخاص يمكن التعرف عليهم. التصدير إلى PDF أو Word أو Excel ينشئ ملفًا مستقلًا على جهاز المستخدم ويجب التعامل معه وفق ضوابط الجهة.</p>
+          <p><strong>صور التوثيق مؤقتة في الذاكرة ولا تُحفظ بعد تحديث الصفحة أو إغلاقها.</strong> لا ترفع صورًا يظهر فيها أشخاص يمكن التعرف عليهم. التصدير إلى PDF أو Word ينشئ ملفًا مستقلًا على جهاز المستخدم ويجب التعامل معه وفق ضوابط الجهة.</p>
         </div>
       </details>
 
@@ -113,7 +113,7 @@
             <span class="eyebrow">الخطة الأسبوعية</span>
             <h2 id="planTitle">الأسابيع السبعة</h2>
           </div>
-          <span class="hint">اضغط على الأفكار أو متابعة الأسبوع لإظهار التفاصيل</span>
+          <span class="hint">اضغطي على الأفكار أو متابعة الأسبوع لإظهار التفاصيل</span>
         </div>
         <div class="table-wrap">
           <div id="planTable" class="plan-table" role="table" aria-label="الخطة الأسبوعية التفاعلية"></div>
@@ -157,7 +157,7 @@
         <strong>شعار التقرير</strong>
         <p>PNG أو JPEG أو WebP فقط، بحد أقصى ٢ م.ب. تتم إعادة معالجة الصورة لإزالة البيانات الوصفية غير الضرورية.</p>
         <label class="btn btn--soft">🖼️ اختيار شعار<input id="reportLogoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden /></label>
-        <button class="btn" id="resetReportLogoBtn" type="button">استخدام شعار الملتقى الافتراضي</button>
+        <button class="btn" id="resetReportLogoBtn" type="button">استخدام شعار التطبيق الافتراضي</button>
       </div>
     </div>
     <div class="dialog-actions">
@@ -173,7 +173,7 @@
     <ul>
       <li>الصور المضافة للتوثيق مؤقتة ولا تُحفظ بعد إغلاق الصفحة أو تحديثها.</li>
       <li>JSON لا يصدّر صور التوثيق.</li>
-      <li>تصدير PDF أو Word أو Excel ينشئ ملفًا محليًا على جهازك؛ احفظه وشاركه وفق ضوابط الجهة.</li>
+      <li>تصدير PDF أو Word أو Excel ينشئ ملفًا محليًا على جهازك، ويمكن أن يتضمن صور الشواهد المؤقتة الموجودة وقت التصدير؛ احفظه وشاركه وفق ضوابط الجهة.</li>
     </ul>
     <button class="btn btn--primary" id="acceptPrivacyBtn" type="button">أوافق وأبدأ</button>
   </dialog>
